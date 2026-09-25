@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Category {
+  id           String  @id @default(cuid())
+  name         String  @unique
+  description  String?
+  catalogueUrl String?
+  active       Boolean @default(true)
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  categoryId  String
+  modelNumber String
+  productName String?
+  pdfUrl      String?
+  active      Boolean @default(true)
+
+  category  Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  enquiries Enquiry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([categoryId, modelNumber])
+  @@index([categoryId])
+}
+
+model Customer {
+  id     String @id @default(cuid())
+  name   String
+  mobile String @unique
+
+  enquiries Enquiry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Enquiry {
+  id         String  @id @default(cuid())
+  customerId String
+  productId  String
+  notes      String?
+  status     String  @default("NEW")
+  source     String  @default("ADMIN")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([customerId])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  mobile    String   @unique
+  pinHash   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
