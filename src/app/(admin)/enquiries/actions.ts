@@ -16,3 +16,26 @@ export async function updateEnquiryStatus(enquiryId: string, newStatus: string) 
     return { success: false, error: "Failed to update status" };
   }
 }
+
+export async function deleteEnquiry(enquiryId: string) {
+  try {
+    const enquiry = await prisma.enquiry.findUnique({
+      where: { id: enquiryId },
+      select: { customerId: true }
+    });
+
+    if (enquiry) {
+      // Deleting customer will cascade and delete ALL their enquiries automatically
+      await prisma.customer.delete({
+        where: { id: enquiry.customerId },
+      });
+    }
+
+    revalidatePath("/enquiries");
+    revalidatePath("/customers");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete customer and enquiries:", error);
+    return { success: false, error: "Failed to delete customer data" };
+  }
+}

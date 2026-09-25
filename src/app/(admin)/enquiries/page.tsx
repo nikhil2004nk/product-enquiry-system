@@ -4,6 +4,7 @@ import StatusDropdown from "./StatusDropdown";
 import SearchBar from "./SearchBar";
 import WhatsappButton from "./WhatsappButton";
 import ProductFilter from "./ProductFilter";
+import DeleteEnquiryButton from "./DeleteEnquiryButton";
 import { ArrowLeft, MessageSquare, Inbox } from "lucide-react";
 import { Suspense } from "react";
 
@@ -187,12 +188,13 @@ export default async function EnquiriesPage(props: {
 
                     {/* Actions */}
                     <td className="px-6 py-4">
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-end">
                         <WhatsappButton 
                           enquiryId={enq.id} 
                           mobile={enq.customer.mobile} 
                           templates={templates} 
                         />
+                        <DeleteEnquiryButton enquiryId={enq.id} />
                       </div>
                     </td>
                   </tr>
@@ -238,12 +240,13 @@ export default async function EnquiriesPage(props: {
                 </p>
               </div>
 
-              <div className="border-t border-gray-50 pt-2 flex justify-end">
+              <div className="border-t border-gray-50 pt-2 flex items-center justify-end">
                 <WhatsappButton 
                   enquiryId={enq.id} 
                   mobile={enq.customer.mobile} 
                   templates={templates} 
                 />
+                <DeleteEnquiryButton enquiryId={enq.id} />
               </div>
             </div>
           ))
