@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import StatusDropdown from "./StatusDropdown";
 import SearchBar from "./SearchBar";
+import WhatsappButton from "./WhatsappButton";
 import { ArrowLeft, MessageSquare, Inbox } from "lucide-react";
 import { Suspense } from "react";
 
@@ -29,6 +30,10 @@ export default async function EnquiriesPage(props: {
     },
     include: { customer: true, product: { include: { category: true } } },
     orderBy: { createdAt: "desc" },
+  });
+
+  const templates = await (prisma as any).messageTemplate.findMany({
+    orderBy: { createdAt: "asc" }
   });
 
   const statusConfig: Record<string, { label: string; cls: string }> = {
@@ -138,15 +143,11 @@ export default async function EnquiriesPage(props: {
                   <div className="flex-1 min-w-0">
                     <StatusDropdown enquiryId={enq.id} currentStatus={enq.status} />
                   </div>
-                  <a
-                    href={`https://wa.me/91${enq.customer.mobile}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs hover:bg-emerald-100 transition-colors shrink-0"
-                  >
-                    <MessageSquare size={14} />
-                    WhatsApp
-                  </a>
+                  <WhatsappButton 
+                    enquiryId={enq.id} 
+                    mobile={enq.customer.mobile} 
+                    templates={templates} 
+                  />
                 </div>
               </div>
             );

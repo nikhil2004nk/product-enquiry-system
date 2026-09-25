@@ -14,5 +14,9 @@ export default async function EnquiryPage() {
     orderBy: { modelNumber: "asc" },
   });
 
-  return <EnquiryForm categories={categories} products={products} />;
+  const templates = await (prisma as any).messageTemplate.findMany({
+    orderBy: { createdAt: "asc" },
+  });
+
+  return <EnquiryForm categories={categories} products={products} templates={templates} />;
 }

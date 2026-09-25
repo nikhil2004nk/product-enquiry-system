@@ -9,8 +9,9 @@ import { CustomDropdown } from "@/components/ui/CustomDropdown";
 type Category = { id: string; name: string; catalogueUrl: string | null };
 type Product = { id: string; modelNumber: string; categoryId: string; productName: string | null; pdfUrl: string | null };
 type ExistingCustomer = { id: string; name: string; enquiries: any[] } | null;
+type Template = { id: string; name: string; isDefault: boolean };
 
-export default function EnquiryForm({ categories, products }: { categories: Category[], products: Product[] }) {
+export default function EnquiryForm({ categories, products, templates }: { categories: Category[], products: Product[], templates: Template[] }) {
   const [stage, setStage] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -20,6 +21,8 @@ export default function EnquiryForm({ categories, products }: { categories: Cate
   const [categoryId, setCategoryId] = useState("");
   const [productId, setProductId] = useState("");
   const [notes, setNotes] = useState("");
+  const defaultTemplate = templates.find(t => t.isDefault)?.id || (templates.length > 0 ? templates[0].id : "");
+  const [templateId, setTemplateId] = useState(defaultTemplate);
 
   // Customer Lookup
   const [existingCustomer, setExistingCustomer] = useState<ExistingCustomer>(null);
@@ -57,7 +60,7 @@ export default function EnquiryForm({ categories, products }: { categories: Cate
       const res = await fetch("/api/enquiries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customerName: name, mobile, productId, notes }),
+        body: JSON.stringify({ customerName: name, mobile, productId, notes, templateId }),
       });
       const data = await res.json();
       
@@ -278,16 +281,37 @@ export default function EnquiryForm({ categories, products }: { categories: Cate
                 <div className="w-8 h-8 rounded-bg-amber-50 flex items-center justify-center">
                   <FileText size={16} className="text-amber-600" />
                 </div>
-                <h2 className="font-bold text-gray-900">Notes</h2>
+                <h2 className="font-bold text-gray-900">Notes & Message</h2>
               </div>
-              <textarea
-                placeholder="Customer interested in price, exchange offer..."
-                rows={4}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="input resize-none"
-                style={{ height: "110px" }}
-              />
+
+              <div className="space-y-4">
+                {templates.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">WhatsApp Template</label>
+                    <CustomDropdown
+                      value={templateId}
+                      onChange={(val: string) => setTemplateId(val)}
+                      options={templates.map(t => ({
+                        value: t.id,
+                        label: t.name + (t.isDefault ? " (Default)" : "")
+                      }))}
+                      placeholder="Select a template"
+                    />
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Notes</label>
+                  <textarea
+                    placeholder="Customer interested in price, exchange offer..."
+                    rows={4}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="input resize-none w-full"
+                    style={{ height: "110px" }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

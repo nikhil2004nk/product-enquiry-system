@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check } from "lucide-react";
+import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package } from "lucide-react";
 import { logoutAdmin } from "@/app/login/actions";
 import { useTransition, useState } from "react";
 
@@ -31,8 +31,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   const adminItems = [
-    { href: "/admin/products", icon: <Settings size={15} />, label: "Manage Products", match: (p: string) => p.startsWith("/admin/products") },
+    { href: "/admin/products", icon: <Package size={15} />, label: "Manage Products", match: (p: string) => p.startsWith("/admin/products") },
     { href: "/users", icon: <Users size={15} />, label: "User Access", match: (p: string) => p.startsWith("/users") },
+    { href: "/settings", icon: <Settings size={15} />, label: "Settings", match: (p: string) => p.startsWith("/settings") },
   ];
 
   return (
