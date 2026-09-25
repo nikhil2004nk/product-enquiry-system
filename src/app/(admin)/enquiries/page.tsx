@@ -56,6 +56,8 @@ export default async function EnquiriesPage(props: {
     CLOSED:    { label: "Closed",    cls: "badge badge-closed" },
   };
 
+  const hasFilters = q !== "" || filterStatus !== "" || filterCategoryId !== "" || filterProductId !== "";
+
   return (
     <div className="w-full max-w-5xl mx-auto animate-fade-up">
 
@@ -72,15 +74,25 @@ export default async function EnquiriesPage(props: {
 
       {/* ── Search & Filters ──────────────────────────────── */}
       <div className="mb-6 space-y-4">
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="flex-1">
+        <div className="flex flex-col md:flex-row gap-3 items-center">
+          <div className="flex-1 w-full">
             <Suspense fallback={<div className="input !pl-10 text-gray-400">Loading search…</div>}>
               <SearchBar filterStatus={filterStatus} />
             </Suspense>
           </div>
-          <Suspense fallback={<div>Loading filters...</div>}>
-            <ProductFilter categories={categories} />
-          </Suspense>
+          <div className="w-full md:w-auto">
+            <Suspense fallback={<div>Loading filters...</div>}>
+              <ProductFilter categories={categories} />
+            </Suspense>
+          </div>
+          {hasFilters && (
+            <Link 
+              href="/enquiries"
+              className="flex items-center justify-center px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-xl text-[13px] transition-colors shrink-0 w-full md:w-auto h-10 md:h-[42px]"
+            >
+              Clear Filters
+            </Link>
+          )}
         </div>
 
         {/* Status filter pills */}
