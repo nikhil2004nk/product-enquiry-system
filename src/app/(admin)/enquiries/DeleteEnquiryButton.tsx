@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { Trash2, AlertTriangle, X } from "lucide-react";
 import { deleteEnquiry } from "./actions";
 
@@ -10,6 +11,7 @@ export default function DeleteEnquiryButton({ enquiryId }: { enquiryId: string }
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -20,6 +22,8 @@ export default function DeleteEnquiryButton({ enquiryId }: { enquiryId: string }
       const result = await deleteEnquiry(enquiryId);
       if (!result.success) {
         alert(result.error);
+      } else {
+        router.refresh();
       }
       setIsOpen(false);
       setStep(1);

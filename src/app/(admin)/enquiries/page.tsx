@@ -4,6 +4,7 @@ import StatusDropdown from "./StatusDropdown";
 import SearchBar from "./SearchBar";
 import WhatsappButton from "./WhatsappButton";
 import ProductFilter from "./ProductFilter";
+import SourceFilter from "./SourceFilter";
 import DeleteEnquiryButton from "./DeleteEnquiryButton";
 import { ArrowLeft, MessageSquare, Inbox } from "lucide-react";
 import { Suspense } from "react";
@@ -11,17 +12,19 @@ import { Suspense } from "react";
 export const dynamic = "force-dynamic";
 
 export default async function EnquiriesPage(props: {
-  searchParams: Promise<{ q?: string; status?: string; categoryId?: string; productId?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; categoryId?: string; productId?: string; source?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const q = searchParams?.q || "";
   const filterStatus = searchParams?.status || "";
   const filterCategoryId = searchParams?.categoryId || "";
   const filterProductId = searchParams?.productId || "";
+  const filterSource = searchParams?.source || "";
 
   const enquiries = await prisma.enquiry.findMany({
     where: {
       ...(filterStatus ? { status: filterStatus as any } : {}),
+      ...(filterSource ? { source: filterSource } : {}),
       ...(filterProductId 
         ? { productId: filterProductId } 
         : filterCategoryId 
@@ -57,7 +60,7 @@ export default async function EnquiriesPage(props: {
     CLOSED:    { label: "Closed",    cls: "badge badge-closed" },
   };
 
-  const hasFilters = q !== "" || filterStatus !== "" || filterCategoryId !== "" || filterProductId !== "";
+  const hasFilters = q !== "" || filterStatus !== "" || filterCategoryId !== "" || filterProductId !== "" || filterSource !== "";
 
   return (
     <div className="w-full max-w-5xl mx-auto animate-fade-up">
@@ -84,6 +87,11 @@ export default async function EnquiriesPage(props: {
           <div className="w-full md:w-auto">
             <Suspense fallback={<div>Loading filters...</div>}>
               <ProductFilter categories={categories} />
+            </Suspense>
+          </div>
+          <div className="w-full md:w-auto">
+            <Suspense fallback={<div>Loading filters...</div>}>
+              <SourceFilter />
             </Suspense>
           </div>
           {hasFilters && (
