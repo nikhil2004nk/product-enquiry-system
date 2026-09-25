@@ -105,14 +105,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex-1 flex flex-col h-[100dvh] overflow-hidden">
 
         {/* Mobile Header */}
-        <header className="md:hidden sticky top-0 z-30 flex h-12 items-center justify-between px-4 bg-white/90 backdrop-blur-md border-b border-gray-100 shrink-0">
-          <div className="flex items-center gap-2">
+        <header className="md:hidden sticky top-0 z-30 flex h-12 items-center justify-between px-3 bg-white/90 backdrop-blur-md border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-1.5">
             <div className="w-6 h-6 rounded-md bg-indigo-600 flex items-center justify-center">
               <Zap size={12} className="text-white" />
             </div>
             <span className="font-bold text-gray-900" style={{ fontSize: 13 }}>Enquiry CRM</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <button
               onClick={handleCopyPublicLink}
               className="w-8 h-8 flex items-center justify-center rounded-lg text-indigo-500 hover:bg-indigo-50 transition-colors"
@@ -120,10 +120,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               {copied ? <Check size={16} className="text-green-500" /> : <LinkIcon size={16} />}
             </button>
-            <Link href="/users" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
+            <Link href="/admin/products" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Products">
+              <Package size={16} />
+            </Link>
+            <Link href="/users" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Users">
               <Users size={16} />
             </Link>
-            <Link href="/admin/products" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
+            <Link href="/settings" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Settings">
               <Settings size={16} />
             </Link>
             <button
@@ -138,7 +141,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 page-pad overflow-y-auto">
+        <main className="flex-1 page-pad overflow-y-auto pb-20">
           {children}
         </main>
       </div>
@@ -150,7 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Center FAB */}
         <div className="flex flex-col items-center -mt-4">
           <Link
-            href="/enquiry"
+            href="/admin-enquiry"
             className="flex items-center justify-center w-12 h-12 rounded-2xl text-white transition-transform active:scale-95"
             style={{ background: "linear-gradient(135deg,#4f46e5,#7c3aed)", boxShadow: "0 6px 20px rgba(79,70,229,0.4)" }}
           >

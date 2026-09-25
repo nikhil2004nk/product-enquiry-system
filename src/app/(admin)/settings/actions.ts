@@ -2,6 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { verifyJwt } from "@/lib/jwt";
+import bcrypt from "bcryptjs";
+
 
 export async function createTemplate(formData: FormData) {
   const name = formData.get("name")?.toString().trim();
@@ -54,4 +58,51 @@ export async function setDefaultTemplate(id: string) {
 export async function saveWhatsappTemplate(formData: FormData): Promise<{ success: boolean; error?: string }> {
   // Dummy function for unused SettingsForm
   return { success: true };
+}
+
+export async function changePin(formData: FormData) {
+  const currentPin = formData.get("currentPin")?.toString().trim();
+  const newPin = formData.get("newPin")?.toString().trim();
+  const confirmPin = formData.get("confirmPin")?.toString().trim();
+
+  if (!currentPin || !newPin || !confirmPin) {
+    return { success: false, error: "All fields are required" };
+  }
+
+  if (newPin !== confirmPin) {
+    return { success: false, error: "New PINs do not match" };
+  }
+
+  if (newPin.length !== 4) {
+    return { success: false, error: "New PIN must be exactly 4 digits" };
+  }
+
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_session")?.value;
+  if (!token) return { success: false, error: "Not authenticated" };
+
+  try {
+    const payload = await verifyJwt(token);
+    if (!payload?.id) return { success: false, error: "Invalid session" };
+
+    const user = await (prisma as any).user.findUnique({
+      where: { id: payload.id }
+    });
+
+    if (!user) return { success: false, error: "User not found" };
+
+    const isValid = await bcrypt.compare(currentPin, user.pinHash);
+    if (!isValid) return { success: false, error: "Current PIN is incorrect" };
+
+    const hashedPin = await bcrypt.hash(newPin, 10);
+    await (prisma as any).user.update({
+      where: { id: payload.id },
+      data: { pinHash: hashedPin }
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error("Change PIN error:", err);
+    return { success: false, error: "Failed to update PIN" };
+  }
 }

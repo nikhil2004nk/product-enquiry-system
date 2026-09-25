@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { createCategory, editCategory, deleteCategory, createProduct, editProduct, deleteProduct, toggleProductStatus } from "./actions";
 import { PlusCircle, Tag, Package, Edit2, Trash2, X, Check, Eye } from "lucide-react";
+import { CustomDropdown } from "@/components/ui/CustomDropdown";
 
 type Product = {
   id: string;
@@ -150,15 +151,12 @@ export default function ProductManager({ categories }: { categories: Category[] 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Category</label>
-                    <select
-                      required
+                    <CustomDropdown
                       value={productCategoryId}
-                      onChange={e => setProductCategoryId(e.target.value)}
-                      className="input w-full bg-white"
-                    >
-                      <option value="" disabled>Select Category</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                      onChange={(val) => setProductCategoryId(val)}
+                      options={categories.map(c => ({ value: c.id, label: c.name }))}
+                      placeholder="Select Category"
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Model Number</label>
