@@ -47,5 +47,11 @@ export async function setDefaultTemplate(id: string) {
   ]);
   
   revalidatePath("/settings");
+  revalidatePath("/settings");
+  return { success: true };
+}
+
+export async function saveWhatsappTemplate(formData: FormData) {
+  // Dummy function for unused SettingsForm
   return { success: true };
 }

@@ -143,7 +143,7 @@ export default async function EnquiriesPage(props: {
                   </td>
                 </tr>
               ) : (
-                enquiries.map((enq) => (
+                enquiries.map((enq: any) => (
                   <tr key={enq.id} className="hover:bg-gray-50/50 transition-colors">
                     {/* Customer */}
                     <td className="px-6 py-4">
@@ -211,7 +211,7 @@ export default async function EnquiriesPage(props: {
             <p className="text-gray-500 font-semibold">No enquiries found</p>
           </div>
         ) : (
-          enquiries.map((enq) => (
+          enquiries.map((enq: any) => (
             <div key={enq.id} className="card p-4 flex flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
                 <div>

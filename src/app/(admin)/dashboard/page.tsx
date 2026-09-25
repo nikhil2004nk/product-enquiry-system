@@ -110,7 +110,7 @@ export default async function DashboardPage() {
             <p className="text-gray-400 text-sm">No enquiries yet. Start by adding one!</p>
           </div>
         ) : (
-          recentEnquiries.map((enq) => (
+          recentEnquiries.map((enq: any) => (
             <Link
               key={enq.id}
               href={`/customers/${enq.customerId}`}
