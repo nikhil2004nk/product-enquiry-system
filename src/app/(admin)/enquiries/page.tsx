@@ -3,21 +3,29 @@ import Link from "next/link";
 import StatusDropdown from "./StatusDropdown";
 import SearchBar from "./SearchBar";
 import WhatsappButton from "./WhatsappButton";
+import ProductFilter from "./ProductFilter";
 import { ArrowLeft, MessageSquare, Inbox } from "lucide-react";
 import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 
 export default async function EnquiriesPage(props: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; categoryId?: string; productId?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const q = searchParams?.q || "";
   const filterStatus = searchParams?.status || "";
+  const filterCategoryId = searchParams?.categoryId || "";
+  const filterProductId = searchParams?.productId || "";
 
   const enquiries = await prisma.enquiry.findMany({
     where: {
       ...(filterStatus ? { status: filterStatus as any } : {}),
+      ...(filterProductId 
+        ? { productId: filterProductId } 
+        : filterCategoryId 
+          ? { product: { categoryId: filterCategoryId } } 
+          : {}),
       ...(q
         ? {
             OR: [
@@ -34,6 +42,11 @@ export default async function EnquiriesPage(props: {
 
   const templates = await (prisma as any).messageTemplate.findMany({
     orderBy: { createdAt: "asc" }
+  });
+
+  const categories = await prisma.category.findMany({
+    include: { products: true },
+    orderBy: { name: "asc" }
   });
 
   const statusConfig: Record<string, { label: string; cls: string }> = {
@@ -58,13 +71,17 @@ export default async function EnquiriesPage(props: {
       </div>
 
       {/* ── Search & Filters ──────────────────────────────── */}
-      <div className="mb-6 space-y-3">
-        {/* Smart search bar (client component) */}
-        <Suspense fallback={
-          <div className="input !pl-10 text-gray-400">Loading search…</div>
-        }>
-          <SearchBar filterStatus={filterStatus} />
-        </Suspense>
+      <div className="mb-6 space-y-4">
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex-1">
+            <Suspense fallback={<div className="input !pl-10 text-gray-400">Loading search…</div>}>
+              <SearchBar filterStatus={filterStatus} />
+            </Suspense>
+          </div>
+          <Suspense fallback={<div>Loading filters...</div>}>
+            <ProductFilter categories={categories} />
+          </Suspense>
+        </div>
 
         {/* Status filter pills */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -90,68 +107,134 @@ export default async function EnquiriesPage(props: {
         </div>
       </div>
 
-      {/* ── Enquiries Grid ────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-xs uppercase tracking-wider">
+              <tr>
+                <th className="px-6 py-4">Customer</th>
+                <th className="px-6 py-4">Product Interest</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Date</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {enquiries.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-12 text-center">
+                    <Inbox size={36} className="mx-auto mb-3 text-gray-300" />
+                    <p className="text-gray-500 font-semibold">No enquiries found</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      {q ? `No results for "${q}". Try a different search.` : "Try adjusting the filters above."}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                enquiries.map((enq) => (
+                  <tr key={enq.id} className="hover:bg-gray-50/50 transition-colors">
+                    {/* Customer */}
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <Link
+                          href={`/customers/${enq.customerId}`}
+                          className="font-bold text-gray-900 hover:text-indigo-600 transition-colors text-sm leading-tight"
+                        >
+                          {enq.customer.name}
+                        </Link>
+                        <span className="text-xs text-gray-500 mt-0.5">{enq.customer.mobile}</span>
+                      </div>
+                    </td>
+
+                    {/* Product */}
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-gray-800">{enq.product.modelNumber}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-xs text-gray-400">{enq.product.category.name}</span>
+                          {(enq as any).source === "PUBLIC" && (
+                            <span className="text-[10px] uppercase font-bold text-indigo-600 bg-indigo-50 px-1.5 rounded">Public</span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-6 py-4">
+                      <div className="w-32">
+                        <StatusDropdown enquiryId={enq.id} currentStatus={enq.status} />
+                      </div>
+                    </td>
+
+                    {/* Date */}
+                    <td className="px-6 py-4">
+                      <span className="text-xs text-gray-500">
+                        {new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "numeric" }).format(new Date(enq.createdAt))}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4">
+                      <div className="flex justify-end">
+                        <WhatsappButton 
+                          enquiryId={enq.id} 
+                          mobile={enq.customer.mobile} 
+                          templates={templates} 
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── MOBILE VIEW: CARDS ────────────────────────────── */}
+      <div className="md:hidden space-y-4">
         {enquiries.length === 0 ? (
-          <div className="card col-span-full p-12 text-center">
+          <div className="card p-12 text-center">
             <Inbox size={36} className="mx-auto mb-3 text-gray-300" />
             <p className="text-gray-500 font-semibold">No enquiries found</p>
-            <p className="text-sm text-gray-400 mt-1">
-              {q ? `No results for "${q}". Try a different search.` : "Try adjusting the filters above."}
-            </p>
           </div>
         ) : (
-          enquiries.map((enq) => {
-            const sc = statusConfig[enq.status] ?? { label: enq.status, cls: "badge" };
-            return (
-              <div key={enq.id} className="card p-5 flex flex-col gap-3 hover:shadow-md transition-shadow">
-                {/* Top row */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <Link
-                      href={`/customers/${enq.customerId}`}
-                      className="font-bold text-gray-900 hover:text-indigo-600 transition-colors text-base leading-tight truncate block"
-                    >
-                      {enq.customer.name}
-                    </Link>
-                    <p className="text-xs text-gray-400 mt-0.5">{enq.customer.mobile}</p>
-                  </div>
-                  <span className={sc.cls}>{sc.label}</span>
+          enquiries.map((enq) => (
+            <div key={enq.id} className="card p-4 flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <Link
+                    href={`/customers/${enq.customerId}`}
+                    className="font-bold text-gray-900 text-sm"
+                  >
+                    {enq.customer.name}
+                  </Link>
+                  <p className="text-xs text-gray-500 mt-0.5">{enq.customer.mobile}</p>
                 </div>
-
-                {/* Product info */}
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-bg-gray-100 flex items-center justify-center text-gray-500 text-xs font-bold shrink-0">
-                    LG
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate">{enq.product.modelNumber}</p>
-                    <p className="text-xs text-gray-400 truncate">{enq.product.category.name}</p>
-                  </div>
-                  {(enq as any).source === "PUBLIC" && (
-                    <span className="badge badge-public ml-auto shrink-0">Public</span>
-                  )}
-                </div>
-
-                {/* Date */}
-                <p className="text-xs text-gray-400">
-                  {new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "numeric" }).format(new Date(enq.createdAt))}
-                </p>
-
-                {/* Actions */}
-                <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-3">
-                  <div className="flex-1 min-w-0">
-                    <StatusDropdown enquiryId={enq.id} currentStatus={enq.status} />
-                  </div>
-                  <WhatsappButton 
-                    enquiryId={enq.id} 
-                    mobile={enq.customer.mobile} 
-                    templates={templates} 
-                  />
+                <div className="w-28 shrink-0">
+                  <StatusDropdown enquiryId={enq.id} currentStatus={enq.status} />
                 </div>
               </div>
-            );
-          })
+
+              <div className="flex items-center justify-between border-t border-gray-50 pt-2">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{enq.product.modelNumber}</p>
+                  <p className="text-xs text-gray-400">{enq.product.category.name}</p>
+                </div>
+                <p className="text-xs text-gray-400 text-right">
+                  {new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short" }).format(new Date(enq.createdAt))}
+                </p>
+              </div>
+
+              <div className="border-t border-gray-50 pt-2 flex justify-end">
+                <WhatsappButton 
+                  enquiryId={enq.id} 
+                  mobile={enq.customer.mobile} 
+                  templates={templates} 
+                />
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

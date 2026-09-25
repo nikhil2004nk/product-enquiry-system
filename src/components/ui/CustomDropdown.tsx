@@ -16,6 +16,7 @@ interface CustomDropdownProps {
   placeholder?: string;
   disabled?: boolean;
   searchable?: boolean;
+  size?: "sm" | "md";
 }
 
 export function CustomDropdown({
@@ -25,6 +26,7 @@ export function CustomDropdown({
   placeholder = "Select…",
   disabled = false,
   searchable = true,
+  size = "md",
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -172,7 +174,8 @@ export function CustomDropdown({
         disabled={disabled}
         onClick={() => (isOpen ? (setIsOpen(false), setSearch("")) : openDropdown())}
         className={[
-          "w-full flex items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-left outline-none transition-all duration-150 border-[1.5px]",
+          "w-full flex items-center justify-between gap-2 rounded-xl text-left outline-none transition-all duration-150 border-[1.5px]",
+          size === "sm" ? "px-2.5 py-1.5" : "px-3.5 py-2.5",
           disabled
             ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
             : isOpen

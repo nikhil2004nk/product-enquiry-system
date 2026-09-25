@@ -24,6 +24,8 @@ export default function StatusDropdown({
     <div className={isPending ? "opacity-50" : ""}>
       <CustomDropdown
         value={currentStatus}
+        searchable={false}
+        size="sm"
         onChange={(val) => {
           if (val !== currentStatus) {
             startTransition(async () => {
