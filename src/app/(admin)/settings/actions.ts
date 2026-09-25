@@ -51,7 +51,7 @@ export async function setDefaultTemplate(id: string) {
   return { success: true };
 }
 
-export async function saveWhatsappTemplate(formData: FormData) {
+export async function saveWhatsappTemplate(formData: FormData): Promise<{ success: boolean; error?: string }> {
   // Dummy function for unused SettingsForm
   return { success: true };
 }
