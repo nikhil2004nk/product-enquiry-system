@@ -166,12 +166,6 @@ export default function EnquiryForm({ categories, products }: { categories: Cate
     <div className="w-full max-w-5xl mx-auto animate-fade-up">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Link
-          href="/dashboard"
-          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
-        >
-          <ArrowLeft size={20} />
-        </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">New Enquiry</h1>
           <p className="text-sm text-gray-400">Add customer & product details</p>

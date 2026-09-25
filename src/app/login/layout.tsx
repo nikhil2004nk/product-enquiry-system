@@ -1,8 +1,8 @@
-import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { verifyJwt } from "@/lib/jwt";
 
-export default async function Home() {
+export default async function LoginLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   const token = cookieStore.get("admin_session")?.value;
 
@@ -13,5 +13,5 @@ export default async function Home() {
     }
   }
 
-  redirect("/enquiry");
+  return <>{children}</>;
 }

@@ -38,12 +38,6 @@ export default async function CustomerHistoryPage({
 
       {/* ── Header ────────────────────────────────────────── */}
       <div className="flex items-center gap-3 mb-7">
-        <Link
-          href="/enquiries"
-          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
-        >
-          <ArrowLeft size={20} />
-        </Link>
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Customer Profile</h1>
       </div>
 
