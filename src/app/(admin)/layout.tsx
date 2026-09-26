@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell, ShieldCheck } from "lucide-react";
 import { logoutAdmin } from "@/app/login/actions";
 import { useTransition, useState, useEffect } from "react";
+import { GlobalAdminSwitcher } from "./GlobalAdminSwitcher";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -49,9 +50,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   const adminItems = [
-    ...(role === "SUPERADMIN" ? [{ href: "/superadmin/dashboard", icon: <ShieldCheck size={15} />, label: "Super Admin", match: (p: string) => p.startsWith("/superadmin") }] : []),
+    ...(role === "SUPERADMIN" ? [
+      { href: "/superadmin/dashboard", icon: <ShieldCheck size={15} />, label: "Super Admin", match: (p: string) => p.startsWith("/superadmin") },
+      { href: "/users", icon: <Users size={15} />, label: "User Access", match: (p: string) => p.startsWith("/users") }
+    ] : []),
     { href: "/admin/products", icon: <Package size={15} />, label: "Manage Catalog", match: (p: string) => p.startsWith("/admin/products") },
-    { href: "/users", icon: <Users size={15} />, label: "User Access", match: (p: string) => p.startsWith("/users") },
     { href: "/settings", icon: <Settings size={15} />, label: "Settings", match: (p: string) => p.startsWith("/settings") },
   ];
 
@@ -73,6 +76,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Nav */}
         <nav className="flex-1 px-2.5 py-4 flex flex-col gap-0.5 overflow-y-auto">
+          {role === "SUPERADMIN" && <GlobalAdminSwitcher />}
+          
           <SidebarLabel>Main</SidebarLabel>
           {navItems.map((item) => (
             <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} active={item.match(pathname)} />
@@ -145,9 +150,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link href="/admin/products" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Catalog">
               <Package size={16} />
             </Link>
-            <Link href="/users" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Users">
-              <Users size={16} />
-            </Link>
+            {role === "SUPERADMIN" && (
+              <Link href="/users" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Users">
+                <Users size={16} />
+              </Link>
+            )}
             <Link href="/settings" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Settings">
               <Settings size={16} />
             </Link>

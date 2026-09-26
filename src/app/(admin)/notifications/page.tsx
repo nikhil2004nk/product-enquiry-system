@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Bell, AlertTriangle, Clock, ChevronRight, MessageSquare, Check } from "lucide-react";
 import { HistoryFilter } from "./HistoryFilter";
 import { ResolveModalButton } from "./ResolveModalButton";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,11 @@ export default async function NotificationsPage({
   const params = await searchParams;
   const tab = params?.tab || "active";
   const dateFilter = params?.date || "";
+  
+  const cookieStore = await cookies();
+  const filterAdminId = cookieStore.get("admin_filter_id")?.value || "";
+  
+  const userCondition = isSuper ? (filterAdminId ? { userId: filterAdminId } : {}) : { userId };
 
   const now = new Date();
   
@@ -35,7 +41,7 @@ export default async function NotificationsPage({
     activeReminders = await prisma.enquiry.findMany({
       where: { 
         isReminderActive: true,
-        ...(isSuper ? {} : { userId })
+        ...userCondition
       },
       include: { customer: true, product: true },
       orderBy: { nextReminderDate: "asc" }
@@ -44,7 +50,7 @@ export default async function NotificationsPage({
     // History Tab
     const historyWhere: any = {
       type: "REMINDER_RESOLVED",
-      enquiry: { ...(isSuper ? {} : { userId }) }
+      enquiry: userCondition
     };
 
     if (dateFilter) {
@@ -108,13 +114,15 @@ export default async function NotificationsPage({
 
   return (
     <div className="w-full max-w-4xl mx-auto animate-fade-up">
-      <div className="mb-7 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center">
-          <Bell size={20} className="text-indigo-600" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Notifications Inbox</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Manage your upcoming and pending follow-ups.</p>
+      <div className="mb-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center">
+            <Bell size={20} className="text-indigo-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Notifications Inbox</h1>
+            <p className="text-sm text-gray-400 mt-0.5">Manage your upcoming and pending follow-ups.</p>
+          </div>
         </div>
       </div>
 

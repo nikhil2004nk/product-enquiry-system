@@ -42,6 +42,11 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
+    // Block standard admins from User Access
+    if (path.startsWith('/users') && role !== 'SUPERADMIN') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
     return NextResponse.next();
   }
 

@@ -143,8 +143,8 @@ export async function bulkImportProducts(products: {
     for (const p of products) {
       if (!p.modelNumber) continue;
 
-      // Ensure category exists
-      let category = await prisma.category.findUnique({ where: { name: p.categoryName } });
+      // Ensure category exists for this user
+      let category = await prisma.category.findFirst({ where: { name: p.categoryName, userId: session.id } });
       if (!category) {
         category = await prisma.category.create({ data: { name: p.categoryName, userId: session.id } });
       }
@@ -175,3 +175,36 @@ export async function bulkImportProducts(products: {
     return { error: "Failed to process bulk import" };
   }
 }
+
+export async function bulkDeleteProducts(ids: string[]) {
+  const session = await getSession();
+  if (!session) return { error: "Unauthorized" };
+
+  try {
+    const { count } = await prisma.product.deleteMany({
+      where: { id: { in: ids } },
+    });
+    revalidatePath("/admin/products");
+    return { success: true, count };
+  } catch (error) {
+    console.error(error);
+    return { error: "Failed to delete selected products. Some might have associated enquiries." };
+  }
+}
+
+export async function bulkDeleteCategories(ids: string[]) {
+  const session = await getSession();
+  if (!session) return { error: "Unauthorized" };
+
+  try {
+    const { count } = await prisma.category.deleteMany({
+      where: { id: { in: ids } },
+    });
+    revalidatePath("/admin/products");
+    return { success: true, count };
+  } catch (error) {
+    console.error(error);
+    return { error: "Failed to delete categories. Some might still contain products." };
+  }
+}
+

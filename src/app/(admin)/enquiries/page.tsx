@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 export default async function EnquiriesPage(props: {
   searchParams: Promise<{ q?: string; status?: string; categoryId?: string; productId?: string; source?: string; month?: string }>;
@@ -32,6 +33,9 @@ export default async function EnquiriesPage(props: {
   const filterSource = searchParams?.source || "";
   const filterMonth = searchParams?.month || "";
 
+  const cookieStore = await cookies();
+  const filterAdminId = cookieStore.get("admin_filter_id")?.value || "";
+
   let monthStart, monthEnd;
   if (filterMonth) {
     const [year, month] = filterMonth.split("-");
@@ -43,7 +47,7 @@ export default async function EnquiriesPage(props: {
 
   const enquiries = await prisma.enquiry.findMany({
     where: {
-      ...(isSuper ? {} : { userId }),
+      ...(isSuper ? (filterAdminId ? { userId: filterAdminId } : {}) : { userId }),
       ...(filterStatus ? { status: filterStatus as any } : {}),
       ...(filterSource ? { source: filterSource } : {}),
       ...(monthStart && monthEnd ? { createdAt: { gte: monthStart, lt: monthEnd } } : {}),
@@ -83,7 +87,7 @@ export default async function EnquiriesPage(props: {
     CLOSED:    { label: "Closed",    cls: "badge badge-closed" },
   };
 
-  const hasFilters = q !== "" || filterStatus !== "" || filterCategoryId !== "" || filterProductId !== "" || filterSource !== "" || filterMonth !== "";
+  const hasFilters = q !== "" || filterStatus !== "" || filterCategoryId !== "" || filterProductId !== "" || filterSource !== "" || filterMonth !== "" || filterAdminId !== "";
 
   return (
     <div className="w-full max-w-5xl mx-auto animate-fade-up">

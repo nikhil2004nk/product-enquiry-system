@@ -4,6 +4,7 @@ import { PlusCircle, Clock, ChevronRight, TrendingUp, TrendingDown, Minus, Bell,
 import { ShareLinkCard } from "./ShareLinkCard";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,12 @@ export default async function DashboardPage() {
   const userId = session.id;
   const isSuper = session.role === "SUPERADMIN";
 
+  const cookieStore = await cookies();
+  const filterAdminId = cookieStore.get("admin_filter_id")?.value || "";
+  
+  // Base where condition for queries
+  const userCondition = isSuper ? (filterAdminId ? { userId: filterAdminId } : {}) : { userId };
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -21,21 +28,21 @@ export default async function DashboardPage() {
   yesterday.setDate(yesterday.getDate() - 1);
 
   const [todayEnquiriesCount, yesterdayEnquiriesCount, recentEnquiries, wonCount, lostCount, todaysFollowUps, overdueFollowUps] = await Promise.all([
-    prisma.enquiry.count({ where: { createdAt: { gte: today }, ...(isSuper ? {} : { userId }) } }),
-    prisma.enquiry.count({ where: { createdAt: { gte: yesterday, lt: today }, ...(isSuper ? {} : { userId }) } }),
+    prisma.enquiry.count({ where: { createdAt: { gte: today }, ...userCondition } }),
+    prisma.enquiry.count({ where: { createdAt: { gte: yesterday, lt: today }, ...userCondition } }),
     prisma.enquiry.findMany({
       take: 3,
-      where: { ...(isSuper ? {} : { userId }) },
+      where: { ...userCondition },
       orderBy: { createdAt: "desc" },
       include: { customer: true, product: { include: { category: true } } },
     }),
-    prisma.interaction.count({ where: { outcome: "WON", enquiry: { ...(isSuper ? {} : { userId }) } } }),
-    prisma.interaction.count({ where: { outcome: "LOST", enquiry: { ...(isSuper ? {} : { userId }) } } }),
+    prisma.interaction.count({ where: { outcome: "WON", enquiry: { ...userCondition } } }),
+    prisma.interaction.count({ where: { outcome: "LOST", enquiry: { ...userCondition } } }),
     prisma.enquiry.findMany({
       where: {
         isReminderActive: true,
         nextReminderDate: { gte: today, lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) },
-        ...(isSuper ? {} : { userId })
+        ...userCondition
       },
       include: { customer: true, product: true },
       orderBy: { nextReminderDate: "asc" }
@@ -44,7 +51,7 @@ export default async function DashboardPage() {
       where: {
         isReminderActive: true,
         nextReminderDate: { lt: today },
-        ...(isSuper ? {} : { userId })
+        ...userCondition
       },
       include: { customer: true, product: true },
       orderBy: { nextReminderDate: "asc" }
@@ -67,9 +74,11 @@ export default async function DashboardPage() {
     <div className="w-full max-w-5xl mx-auto animate-fade-up">
 
       {/* ── Header ────────────────────────────────────────── */}
-      <div className="mb-7">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{timeGreeting()} 👋</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Here's what's happening in your business today.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-7">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{timeGreeting()} 👋</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Here's what's happening in your business today.</p>
+        </div>
       </div>
 
       {/* ── Hero Stat Cards ───────────────────────────────── */}

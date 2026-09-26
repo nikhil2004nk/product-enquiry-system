@@ -1,0 +1,93 @@
+"use client";
+
+import { useEffect, useState, useTransition, useRef } from "react";
+import { getAdmins, setAdminFilter } from "./actions";
+import { Users, ChevronDown, Check } from "lucide-react";
+
+export function GlobalAdminSwitcher() {
+  const [admins, setAdmins] = useState<{ id: string; name: string }[]>([]);
+  const [currentAdmin, setCurrentAdmin] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const match = document.cookie.match(/(^| )admin_filter_id=([^;]+)/);
+    if (match) setCurrentAdmin(match[2]);
+
+    getAdmins().then(setAdmins);
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (admins.length === 0) return null;
+
+  return (
+    <div className="px-2.5 mb-2 mt-4">
+      <p className="px-3 pt-1 pb-1.5 font-bold uppercase tracking-widest text-white/30" style={{ fontSize: 9.5 }}>
+        Viewing As
+      </p>
+      <div className="relative" ref={dropdownRef}>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          disabled={isPending}
+          className="w-full flex items-center justify-between bg-white/10 hover:bg-white/15 transition-colors text-white border-0 rounded-xl px-3 py-2 text-xs font-semibold disabled:opacity-50"
+        >
+          <div className="flex items-center gap-2">
+            <Users size={14} className="text-indigo-300" />
+            <span className="truncate">
+              {currentAdmin === "" ? "All Admins (Mixed)" : admins.find(a => a.id === currentAdmin)?.name || "Unknown"}
+            </span>
+          </div>
+          {isPending ? (
+            <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <ChevronDown size={14} className={`text-white/50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          )}
+        </button>
+
+        {isOpen && (
+          <div className="absolute top-full mt-1 w-full z-50 bg-white border border-gray-100 rounded-xl shadow-xl shadow-gray-200/50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                setCurrentAdmin("");
+                startTransition(async () => {
+                  await setAdminFilter("");
+                  window.location.reload();
+                });
+              }}
+              className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center justify-between transition-colors text-gray-900"
+            >
+              <span className={currentAdmin === "" ? "font-bold text-indigo-600" : "font-medium"}>All Admins (Mixed)</span>
+              {currentAdmin === "" && <Check size={14} className="text-indigo-600" />}
+            </button>
+            {admins.map((admin) => (
+              <button
+                key={admin.id}
+                onClick={() => {
+                  setIsOpen(false);
+                  setCurrentAdmin(admin.id);
+                  startTransition(async () => {
+                    await setAdminFilter(admin.id);
+                    window.location.reload();
+                  });
+                }}
+                className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center justify-between transition-colors text-gray-900"
+              >
+                <span className={currentAdmin === admin.id ? "font-bold text-indigo-600" : "font-medium"}>{admin.name}</span>
+                {currentAdmin === admin.id && <Check size={14} className="text-indigo-600" />}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
