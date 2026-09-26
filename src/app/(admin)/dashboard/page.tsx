@@ -18,6 +18,12 @@ export default async function DashboardPage() {
   const cookieStore = await cookies();
   const filterAdminId = cookieStore.get("admin_filter_id")?.value || "";
   
+  // publicLinkId logic (same as sidebar):
+  // Super Admin + specific admin selected → /enquiry/[adminId]
+  // Super Admin + All Mixed             → /enquiry (global)
+  // Regular Admin                       → /enquiry/[their own id]
+  const publicLinkId = isSuper ? filterAdminId : userId;
+
   // Base where condition for queries
   const userCondition = isSuper ? (filterAdminId ? { userId: filterAdminId } : {}) : { userId };
 
@@ -171,7 +177,7 @@ export default async function DashboardPage() {
           <span className="text-xs text-gray-400 mt-0.5">Browse all enquiries</span>
         </Link>
 
-        <ShareLinkCard />
+        <ShareLinkCard publicLinkId={publicLinkId} />
       </div>
 
       {/* ── Priority Follow-ups ───────────────────────────── */}

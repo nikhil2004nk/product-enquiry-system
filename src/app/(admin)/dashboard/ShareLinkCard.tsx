@@ -3,11 +3,13 @@
 import { Link as LinkIcon, Check } from "lucide-react";
 import { useState } from "react";
 
-export function ShareLinkCard() {
+export function ShareLinkCard({ publicLinkId = "" }: { publicLinkId?: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    const url = `${window.location.origin}/enquiry`;
+    const url = publicLinkId
+      ? `${window.location.origin}/enquiry/${publicLinkId}`
+      : `${window.location.origin}/enquiry`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -22,7 +24,9 @@ export function ShareLinkCard() {
         {copied ? <Check size={22} /> : <LinkIcon size={22} />}
       </div>
       <span className="font-bold text-gray-900">{copied ? "Copied!" : "Share Link"}</span>
-      <span className="text-xs text-gray-400 mt-0.5">Copy public enquiry link</span>
+      <span className="text-xs text-gray-400 mt-0.5">
+        {publicLinkId ? "Copy your public enquiry link" : "Copy global enquiry link"}
+      </span>
     </button>
   );
 }
