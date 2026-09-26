@@ -120,7 +120,7 @@ export default function PublicEnquiryForm({ categories, products }: { categories
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-3">
           <Tag size={15} className="text-violet-600" />
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Product of Interest</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Service / Product of Interest</p>
         </div>
 
         <div>
@@ -137,7 +137,7 @@ export default function PublicEnquiryForm({ categories, products }: { categories
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Model</label>
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Option / Item</label>
           <CustomDropdown
             value={productId}
             onChange={(val: string) => setProductId(val)}
@@ -145,7 +145,7 @@ export default function PublicEnquiryForm({ categories, products }: { categories
               value: p.id,
               label: `${p.modelNumber} ${p.productName ? `(${p.productName})` : ""}`
             }))}
-            placeholder="Select Model"
+            placeholder="Select Option"
             disabled={!categoryId}
           />
         </div>

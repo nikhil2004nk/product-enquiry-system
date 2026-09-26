@@ -124,37 +124,37 @@ export default function ProductManager({ categories }: { categories: Category[] 
     const data = categories.flatMap(c => 
       c.products.map(p => ({
         Category: c.name,
-        "Model Number": p.modelNumber,
-        "Product Name": p.productName || "",
+        "Item Code": p.modelNumber,
+        "Item Name": p.productName || "",
         "PDF URL": p.pdfUrl || "",
         Status: p.active ? "Active" : "Inactive"
       }))
     );
     
     if (data.length === 0) {
-      alert("No products to export.");
+      alert("No items to export.");
       return;
     }
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Products");
-    XLSX.writeFile(wb, "products_catalog.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Catalog Items");
+    XLSX.writeFile(wb, "catalog.xlsx");
   };
 
   const handleDownloadTemplate = () => {
     const templateData = [
       {
-        Category: "OLED TV",
-        "Model Number": "OLED65C3",
-        "Product Name": "65 inch C3 Series",
-        "PDF URL": "https://example.com/spec.pdf",
+        Category: "Services",
+        "Item Code": "SVC-001",
+        "Item Name": "Premium Consultation",
+        "PDF URL": "https://example.com/details.pdf",
         Status: "Active"
       },
       {
-        Category: "OLED TV",
-        "Model Number": "OLED55C3",
-        "Product Name": "",
+        Category: "Products",
+        "Item Code": "PRD-001",
+        "Item Name": "Starter Kit",
         "PDF URL": "",
         Status: "Inactive"
       }
@@ -167,7 +167,7 @@ export default function ProductManager({ categories }: { categories: Category[] 
     // Set column widths for better readability
     ws['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 30 }, { wch: 40 }, { wch: 10 }];
 
-    XLSX.writeFile(wb, "products_template.xlsx");
+    XLSX.writeFile(wb, "catalog_template.xlsx");
   };
 
   const processExcelFile = (file: File) => {
@@ -182,14 +182,14 @@ export default function ProductManager({ categories }: { categories: Category[] 
         
         const parsedData = data.map((row: any) => ({
           categoryName: row["Category"]?.toString().trim() || "Uncategorized",
-          modelNumber: row["Model Number"]?.toString().trim(),
-          productName: row["Product Name"]?.toString().trim() || null,
+          modelNumber: (row["Item Code"] || row["Model Number"])?.toString().trim(),
+          productName: (row["Item Name"] || row["Product Name"])?.toString().trim() || null,
           pdfUrl: row["PDF URL"]?.toString().trim() || null,
           active: row["Status"] !== "Inactive"
         })).filter((item: any) => item.modelNumber);
 
         if (parsedData.length === 0) {
-          alert("No valid products found in Excel file.");
+          alert("No valid items found in Excel file. Ensure it has an 'Item Code' column.");
           return;
         }
 
@@ -197,7 +197,7 @@ export default function ProductManager({ categories }: { categories: Category[] 
           const res = await bulkImportProducts(parsedData);
           if (res.error) alert(res.error);
           else {
-            alert(`Successfully imported ${res.count} products!`);
+            alert(`Successfully imported ${res.count} items!`);
             setShowImportModal(false);
           }
           if (fileInputRef.current) fileInputRef.current.value = "";
@@ -232,7 +232,7 @@ export default function ProductManager({ categories }: { categories: Category[] 
             tab === "products" ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
-          Manage Products
+          Manage Catalog Items
         </button>
         <button
           onClick={() => setTab("categories")}
@@ -248,7 +248,7 @@ export default function ProductManager({ categories }: { categories: Category[] 
       {tab === "products" && (
         <div className="space-y-6 animate-fade-in">
           <div className="flex justify-between items-center flex-wrap gap-2">
-            <h2 className="text-lg font-bold text-gray-900">Products ({categories.reduce((acc, c) => acc + c.products.length, 0)})</h2>
+            <h2 className="text-lg font-bold text-gray-900">Catalog Items ({categories.reduce((acc, c) => acc + c.products.length, 0)})</h2>
             <div className="flex items-center gap-2">
               <button onClick={handleExport} className="btn bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 btn-sm font-semibold flex gap-1.5 items-center">
                 <Download size={14} /> Export
@@ -258,7 +258,7 @@ export default function ProductManager({ categories }: { categories: Category[] 
               </button>
               {!showAddProduct && (
                 <button onClick={() => { setShowAddProduct(true); setEditingProduct(null); setProductCategoryId(categories[0]?.id || ""); }} className="btn btn-primary btn-sm ml-2">
-                  <PlusCircle size={16} /> Add Product
+                  <PlusCircle size={16} /> Add Item
                 </button>
               )}
             </div>
@@ -266,7 +266,7 @@ export default function ProductManager({ categories }: { categories: Category[] 
 
           {(showAddProduct || editingProduct) && (
             <div className="card p-5 border border-indigo-200 bg-indigo-50/30">
-              <h3 className="font-bold text-gray-900 mb-4">{editingProduct ? "Edit Product" : "Add New Product"}</h3>
+              <h3 className="font-bold text-gray-900 mb-4">{editingProduct ? "Edit Item" : "Add New Item"}</h3>
               <form onSubmit={handleSaveProduct} className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -279,11 +279,11 @@ export default function ProductManager({ categories }: { categories: Category[] 
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Model Number</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Item Code / Reference</label>
                     <input type="text" required value={productModel} onChange={e => setProductModel(e.target.value)} className="input w-full bg-white" placeholder="e.g. 55C3" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Marketing Name (Optional)</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Item Name / Title (Optional)</label>
                     <input type="text" value={productName} onChange={e => setProductName(e.target.value)} className="input w-full bg-white" placeholder="e.g. OLED Evo" />
                   </div>
                   <div>
@@ -293,7 +293,7 @@ export default function ProductManager({ categories }: { categories: Category[] 
                 </div>
                 <div className="flex justify-end gap-2">
                   <button type="button" onClick={() => { setShowAddProduct(false); setEditingProduct(null); }} className="btn bg-white border border-gray-200 text-gray-600 hover:bg-gray-50">Cancel</button>
-                  <button type="submit" disabled={isPending} className="btn btn-primary">{isPending ? "Saving..." : "Save Product"}</button>
+                  <button type="submit" disabled={isPending} className="btn btn-primary">{isPending ? "Saving..." : "Save Item"}</button>
                 </div>
               </form>
             </div>
@@ -361,7 +361,7 @@ export default function ProductManager({ categories }: { categories: Category[] 
               </div>
             ))}
             {categories.every(c => c.products.length === 0) && !showAddProduct && (
-              <div className="text-center p-8 text-gray-500 card">No products found. Add your first model!</div>
+              <div className="text-center p-8 text-gray-500 card">No items found. Add your first item!</div>
             )}
           </div>
         </div>
@@ -460,8 +460,8 @@ export default function ProductManager({ categories }: { categories: Category[] 
               <X size={18} />
             </button>
             <div className="p-6 overflow-y-auto flex-1">
-              <h2 className="text-xl font-bold text-gray-900 mb-2 pr-6">Import Products</h2>
-              <p className="text-sm text-gray-500 mb-5">Upload an Excel file (.xlsx) to bulk create or update your products.</p>
+              <h2 className="text-xl font-bold text-gray-900 mb-2 pr-6">Import Catalog</h2>
+              <p className="text-sm text-gray-500 mb-5">Upload an Excel file (.xlsx) to bulk create or update your catalog items.</p>
               
               <div
                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}

@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   const adminItems = [
-    { href: "/admin/products", icon: <Package size={15} />, label: "Manage Products", match: (p: string) => p.startsWith("/admin/products") },
+    { href: "/admin/products", icon: <Package size={15} />, label: "Manage Catalog", match: (p: string) => p.startsWith("/admin/products") },
     { href: "/users", icon: <Users size={15} />, label: "User Access", match: (p: string) => p.startsWith("/users") },
     { href: "/settings", icon: <Settings size={15} />, label: "Settings", match: (p: string) => p.startsWith("/settings") },
   ];
@@ -120,7 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               {copied ? <Check size={16} className="text-green-500" /> : <LinkIcon size={16} />}
             </button>
-            <Link href="/admin/products" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Products">
+            <Link href="/admin/products" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Catalog">
               <Package size={16} />
             </Link>
             <Link href="/users" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Users">

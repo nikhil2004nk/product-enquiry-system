@@ -113,7 +113,7 @@ export default function EnquiryForm({ categories, products, templates }: { categ
             <div className="flex items-start gap-3 p-4 rounded-xl bg-gray-50">
               <Tag size={18} className="text-gray-400 mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs section-label mb-1">Product</p>
+                <p className="text-xs section-label mb-1">Offering</p>
                 <p className="font-bold text-gray-900">{savedData.category?.name}</p>
                 <p className="text-sm text-gray-500">{savedData.product?.modelNumber}</p>
               </div>
@@ -171,7 +171,7 @@ export default function EnquiryForm({ categories, products, templates }: { categ
       <div className="flex items-center gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">New Enquiry</h1>
-          <p className="text-sm text-gray-400">Add customer & product details</p>
+          <p className="text-sm text-gray-400">Add customer & offering details</p>
         </div>
       </div>
 
@@ -243,7 +243,7 @@ export default function EnquiryForm({ categories, products, templates }: { categ
                 <div className="w-8 h-8 rounded-bg-violet-50 flex items-center justify-center">
                   <Tag size={16} className="text-violet-600" />
                 </div>
-                <h2 className="font-bold text-gray-900">Product Interest</h2>
+                <h2 className="font-bold text-gray-900">Offering Interest</h2>
               </div>
 
               <div className="space-y-4">
@@ -261,7 +261,7 @@ export default function EnquiryForm({ categories, products, templates }: { categ
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Model</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Option / Item</label>
                   <CustomDropdown
                     value={productId}
                     onChange={(val: string) => setProductId(val)}
@@ -269,7 +269,7 @@ export default function EnquiryForm({ categories, products, templates }: { categ
                       value: p.id,
                       label: `${p.modelNumber} ${p.productName ? `(${p.productName})` : ""}`
                     }))}
-                    placeholder="Select Model"
+                    placeholder="Select Option"
                     disabled={!categoryId}
                   />
                 </div>
