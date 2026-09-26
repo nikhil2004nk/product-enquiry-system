@@ -7,12 +7,12 @@ import { logoutAdmin } from "@/app/login/actions";
 import { useTransition, useState, useEffect } from "react";
 import { GlobalAdminSwitcher } from "./GlobalAdminSwitcher";
 
-export default function AdminLayoutClient({ 
-  children, 
-  role, 
+export default function AdminLayoutClient({
+  children,
+  role,
   isViewingAsAdmin = false,
   publicLinkId = "",
-}: { 
+}: {
   children: React.ReactNode;
   role: string | null;
   isViewingAsAdmin?: boolean;
@@ -73,7 +73,7 @@ export default function AdminLayoutClient({
         {/* Nav */}
         <nav className="flex-1 px-2.5 py-4 flex flex-col gap-0.5 overflow-y-auto">
           {role === "SUPERADMIN" && <GlobalAdminSwitcher />}
-          
+
           <SidebarLabel>Main</SidebarLabel>
           {navItems.map((item) => (
             <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} active={item.match(pathname)} />
@@ -156,7 +156,7 @@ export default function AdminLayoutClient({
         <div className="md:hidden fixed inset-0 z-[100] flex">
           {/* Backdrop */}
           <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-          
+
           {/* Sidebar Drawer */}
           <aside className="relative w-64 max-w-[80vw] h-full shadow-2xl flex flex-col animate-fade-in" style={{ background: "var(--sidebar)" }}>
             <div className="flex h-12 items-center justify-between px-5 border-b border-white/10 shrink-0">
@@ -170,10 +170,10 @@ export default function AdminLayoutClient({
                 <X size={20} />
               </button>
             </div>
-            
+
             <nav className="flex-1 px-2.5 py-4 flex flex-col gap-0.5 overflow-y-auto">
               {role === "SUPERADMIN" && <GlobalAdminSwitcher />}
-              
+
               <SidebarLabel>Main</SidebarLabel>
               {navItems.map((item) => (
                 <div key={item.href} onClick={() => setMobileMenuOpen(false)}>
@@ -235,7 +235,7 @@ export default function AdminLayoutClient({
           <span className="mt-0.5 font-semibold text-indigo-600" style={{ fontSize: 10 }}>New</span>
         </div>
 
-        <MobileNavItem href="/enquiries" icon={<Clock size={19} />} label="History" active={pathname.startsWith("/enquiries")} />
+        <MobileNavItem href="/enquiries" icon={<Clock size={19} />} label="Enquires" active={pathname.startsWith("/enquiries")} />
       </nav>
     </div>
   );
@@ -261,8 +261,8 @@ function NavItem({
     <Link
       href={href}
       className={`flex items-center gap-2.5 rounded-xl px-3 py-2 font-semibold transition-all duration-150 ${active
-          ? "bg-indigo-600 text-white shadow-sm shadow-indigo-900/30"
-          : "text-white/55 hover:bg-white/8 hover:text-white"
+        ? "bg-indigo-600 text-white shadow-sm shadow-indigo-900/30"
+        : "text-white/55 hover:bg-white/8 hover:text-white"
         }`}
       style={{ fontSize: 12.5 }}
     >

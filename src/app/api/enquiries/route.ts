@@ -79,9 +79,8 @@ export async function POST(request: NextRequest) {
         notes,
         status: "NEW",
         source, // ADMIN or PUBLIC
-        // If public, we leave userId null so it goes to the Super Admin's "Unassigned" queue.
-        // If created by an admin, assign it to them immediately.
-        userId: source === "ADMIN" ? adminUserId : null,
+        // adminUserId is set from: JWT (admin-created) | publicAdminId (/enquiry/[id] link) | null (/enquiry base)
+        userId: adminUserId || null,
       } as any,
     });
 

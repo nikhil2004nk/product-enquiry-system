@@ -11,6 +11,7 @@ import ReminderButton from "./ReminderButton";
 import { ArrowLeft, MessageSquare, Inbox } from "lucide-react";
 import { Suspense } from "react";
 import { AssignDropdown } from "../superadmin/dashboard/AssignDropdown";
+import AssignedToFilter from "./AssignedToFilter";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
 export default async function EnquiriesPage(props: {
-  searchParams: Promise<{ q?: string; status?: string; categoryId?: string; productId?: string; source?: string; month?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; categoryId?: string; productId?: string; source?: string; month?: string; assignedTo?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -33,6 +34,7 @@ export default async function EnquiriesPage(props: {
   const filterProductId = searchParams?.productId || "";
   const filterSource = searchParams?.source || "";
   const filterMonth = searchParams?.month || "";
+  const filterAssignedTo = searchParams?.assignedTo || "";
 
   const cookieStore = await cookies();
   const filterAdminId = cookieStore.get("admin_filter_id")?.value || "";
@@ -53,7 +55,16 @@ export default async function EnquiriesPage(props: {
 
   const enquiries = await prisma.enquiry.findMany({
     where: {
-      ...(isSuper ? (filterAdminId ? { userId: filterAdminId } : {}) : { userId }),
+      // Super admin: URL assignedTo filter takes priority, then sidebar cookie filter
+      ...(isSuper
+        ? filterAssignedTo === "unassigned"
+          ? { userId: null }
+          : filterAssignedTo
+          ? { userId: filterAssignedTo }
+          : filterAdminId
+          ? { userId: filterAdminId }
+          : {}
+        : { userId }),
       ...(filterStatus ? { status: filterStatus as any } : {}),
       ...(filterSource ? { source: filterSource } : {}),
       ...(monthStart && monthEnd ? { createdAt: { gte: monthStart, lt: monthEnd } } : {}),
@@ -93,7 +104,7 @@ export default async function EnquiriesPage(props: {
     CLOSED:    { label: "Closed",    cls: "badge badge-closed" },
   };
 
-  const hasFilters = q !== "" || filterStatus !== "" || filterCategoryId !== "" || filterProductId !== "" || filterSource !== "" || filterMonth !== "" || filterAdminId !== "";
+  const hasFilters = q !== "" || filterStatus !== "" || filterCategoryId !== "" || filterProductId !== "" || filterSource !== "" || filterMonth !== "" || filterAssignedTo !== "";
 
   return (
     <div className="w-full max-w-5xl mx-auto animate-fade-up">
@@ -132,6 +143,13 @@ export default async function EnquiriesPage(props: {
               <MonthFilter />
             </Suspense>
           </div>
+          {isSuper && (
+            <div className="w-full md:w-auto">
+              <Suspense fallback={<div>Loading filters...</div>}>
+                <AssignedToFilter admins={admins} />
+              </Suspense>
+            </div>
+          )}
           {hasFilters && (
             <Link 
               href="/enquiries"

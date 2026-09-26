@@ -23,14 +23,14 @@ export default async function NotificationsPage({
   const params = await searchParams;
   const tab = params?.tab || "active";
   const dateFilter = params?.date || "";
-  
+
   const cookieStore = await cookies();
   const filterAdminId = cookieStore.get("admin_filter_id")?.value || "";
-  
+
   const userCondition = isSuper ? (filterAdminId ? { userId: filterAdminId } : {}) : { userId };
 
   const now = new Date();
-  
+
   const endOfToday = new Date(now);
   endOfToday.setHours(23, 59, 59, 999);
 
@@ -39,7 +39,7 @@ export default async function NotificationsPage({
 
   if (tab === "active") {
     activeReminders = await prisma.enquiry.findMany({
-      where: { 
+      where: {
         isReminderActive: true,
         ...userCondition
       },
@@ -55,8 +55,8 @@ export default async function NotificationsPage({
 
     if (dateFilter) {
       const d = new Date(dateFilter);
-      const start = new Date(d.setHours(0,0,0,0));
-      const end = new Date(d.setHours(23,59,59,999));
+      const start = new Date(d.setHours(0, 0, 0, 0));
+      const end = new Date(d.setHours(23, 59, 59, 999));
       historyWhere.createdAt = { gte: start, lte: end };
     }
 
@@ -79,7 +79,7 @@ export default async function NotificationsPage({
   const renderCard = (enq: any, type: 'overdue' | 'today' | 'upcoming') => {
     const borderColor = type === 'overdue' ? 'border-l-red-500' : type === 'today' ? 'border-l-indigo-500' : 'border-l-gray-300';
     const badgeColor = type === 'overdue' ? 'bg-red-50 text-red-600' : type === 'today' ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-100 text-gray-600';
-    
+
     return (
       <div key={enq.id} className={`card p-5 border-l-4 ${borderColor} group hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3`}>
         <div className="flex items-start gap-4">
@@ -100,7 +100,7 @@ export default async function NotificationsPage({
             )}
           </div>
         </div>
-        
+
         <div className="flex md:flex-col items-center md:items-end justify-between border-t border-gray-100 md:border-t-0 pt-3 md:pt-0">
           <div className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 ${badgeColor}`}>
             <Clock size={14} />
@@ -128,17 +128,17 @@ export default async function NotificationsPage({
 
       {/* Tabs */}
       <div className="flex items-center gap-4 border-b border-gray-200 mb-6">
-        <Link 
-          href="/notifications?tab=active" 
+        <Link
+          href="/notifications?tab=active"
           className={`pb-3 font-bold text-sm border-b-2 transition-colors ${tab === "active" ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
         >
           Active Reminders
         </Link>
-        <Link 
-          href="/notifications?tab=history" 
+        <Link
+          href="/notifications?tab=history"
           className={`pb-3 font-bold text-sm border-b-2 transition-colors ${tab === "history" ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
         >
-          History Log
+          History
         </Link>
       </div>
 
@@ -156,34 +156,34 @@ export default async function NotificationsPage({
             <p className="text-gray-500 text-sm">You have no pending follow-ups. Great job!</p>
           </div>
         ) : (
-        <div className="space-y-8">
-          {overdue.length > 0 && (
-            <section>
-              <h3 className="font-bold text-red-600 uppercase tracking-wider text-xs mb-3 flex items-center gap-1.5">
-                <AlertTriangle size={14} /> Overdue ({overdue.length})
-              </h3>
-              {overdue.map(enq => renderCard(enq, 'overdue'))}
-            </section>
-          )}
+          <div className="space-y-8">
+            {overdue.length > 0 && (
+              <section>
+                <h3 className="font-bold text-red-600 uppercase tracking-wider text-xs mb-3 flex items-center gap-1.5">
+                  <AlertTriangle size={14} /> Overdue ({overdue.length})
+                </h3>
+                {overdue.map(enq => renderCard(enq, 'overdue'))}
+              </section>
+            )}
 
-          {today.length > 0 && (
-            <section>
-              <h3 className="font-bold text-indigo-600 uppercase tracking-wider text-xs mb-3 flex items-center gap-1.5">
-                <Bell size={14} /> Today ({today.length})
-              </h3>
-              {today.map(enq => renderCard(enq, 'today'))}
-            </section>
-          )}
+            {today.length > 0 && (
+              <section>
+                <h3 className="font-bold text-indigo-600 uppercase tracking-wider text-xs mb-3 flex items-center gap-1.5">
+                  <Bell size={14} /> Today ({today.length})
+                </h3>
+                {today.map(enq => renderCard(enq, 'today'))}
+              </section>
+            )}
 
-          {upcoming.length > 0 && (
-            <section>
-              <h3 className="font-bold text-gray-500 uppercase tracking-wider text-xs mb-3 flex items-center gap-1.5">
-                <Clock size={14} /> Upcoming ({upcoming.length})
-              </h3>
-              {upcoming.map(enq => renderCard(enq, 'upcoming'))}
-            </section>
-          )}
-        </div>
+            {upcoming.length > 0 && (
+              <section>
+                <h3 className="font-bold text-gray-500 uppercase tracking-wider text-xs mb-3 flex items-center gap-1.5">
+                  <Clock size={14} /> Upcoming ({upcoming.length})
+                </h3>
+                {upcoming.map(enq => renderCard(enq, 'upcoming'))}
+              </section>
+            )}
+          </div>
         )
       ) : (
         historyInteractions.length === 0 ? (
@@ -197,8 +197,8 @@ export default async function NotificationsPage({
                 <div>
                   <h4 className="font-bold text-gray-900 group-hover:text-indigo-600">{intx.enquiry.customer.name}</h4>
                   <p className="text-xs font-semibold text-gray-500 mt-0.5">
-                    {new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).format(intx.createdAt)} 
-                    <span className="mx-2">•</span> 
+                    {new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).format(intx.createdAt)}
+                    <span className="mx-2">•</span>
                     Outcome: <span className="text-indigo-600">{intx.outcome}</span>
                   </p>
                   {intx.notes && <p className="text-sm text-gray-600 italic mt-1">"{intx.notes}"</p>}
