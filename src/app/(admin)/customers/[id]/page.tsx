@@ -4,15 +4,25 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Phone, MessageCircle, Calendar, Tag } from "lucide-react";
 import InteractionTimeline from "./InteractionTimeline";
 
+import { getSession } from "@/lib/auth";
+
 export default async function CustomerHistoryPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await getSession();
+  if (!session) return notFound();
+  const userId = session.id;
+  const isSuper = session.role === "SUPERADMIN";
+
   const resolvedParams = await params;
   
-  const customer = await prisma.customer.findUnique({
-    where: { id: resolvedParams.id },
+  const customer = await prisma.customer.findFirst({
+    where: { 
+      id: resolvedParams.id,
+      ...(isSuper ? {} : { userId })
+    },
     include: {
       enquiries: {
         include: { 

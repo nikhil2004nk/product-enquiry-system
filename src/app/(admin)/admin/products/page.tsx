@@ -1,10 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import ProductManager from "./ProductManager";
 
+import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
+
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  const userId = session.id;
+  const isSuper = session.role === "SUPERADMIN";
+
   const categories = await prisma.category.findMany({
+    where: { ...(isSuper ? {} : { userId }) },
     include: { products: { orderBy: { modelNumber: "asc" } } },
     orderBy: { name: "asc" },
   });

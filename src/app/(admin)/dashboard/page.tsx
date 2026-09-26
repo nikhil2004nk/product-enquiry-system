@@ -2,10 +2,18 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { PlusCircle, Clock, ChevronRight, TrendingUp, TrendingDown, Minus, Bell, AlertTriangle } from "lucide-react";
 import { ShareLinkCard } from "./ShareLinkCard";
+import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  
+  const userId = session.id;
+  const isSuper = session.role === "SUPERADMIN";
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -13,19 +21,21 @@ export default async function DashboardPage() {
   yesterday.setDate(yesterday.getDate() - 1);
 
   const [todayEnquiriesCount, yesterdayEnquiriesCount, recentEnquiries, wonCount, lostCount, todaysFollowUps, overdueFollowUps] = await Promise.all([
-    prisma.enquiry.count({ where: { createdAt: { gte: today } } }),
-    prisma.enquiry.count({ where: { createdAt: { gte: yesterday, lt: today } } }),
+    prisma.enquiry.count({ where: { createdAt: { gte: today }, ...(isSuper ? {} : { userId }) } }),
+    prisma.enquiry.count({ where: { createdAt: { gte: yesterday, lt: today }, ...(isSuper ? {} : { userId }) } }),
     prisma.enquiry.findMany({
       take: 3,
+      where: { ...(isSuper ? {} : { userId }) },
       orderBy: { createdAt: "desc" },
       include: { customer: true, product: { include: { category: true } } },
     }),
-    prisma.interaction.count({ where: { outcome: "WON" } }),
-    prisma.interaction.count({ where: { outcome: "LOST" } }),
+    prisma.interaction.count({ where: { outcome: "WON", enquiry: { ...(isSuper ? {} : { userId }) } } }),
+    prisma.interaction.count({ where: { outcome: "LOST", enquiry: { ...(isSuper ? {} : { userId }) } } }),
     prisma.enquiry.findMany({
       where: {
         isReminderActive: true,
-        nextReminderDate: { gte: today, lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) }
+        nextReminderDate: { gte: today, lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) },
+        ...(isSuper ? {} : { userId })
       },
       include: { customer: true, product: true },
       orderBy: { nextReminderDate: "asc" }
@@ -33,7 +43,8 @@ export default async function DashboardPage() {
     prisma.enquiry.findMany({
       where: {
         isReminderActive: true,
-        nextReminderDate: { lt: today }
+        nextReminderDate: { lt: today },
+        ...(isSuper ? {} : { userId })
       },
       include: { customer: true, product: true },
       orderBy: { nextReminderDate: "asc" }
@@ -41,7 +52,7 @@ export default async function DashboardPage() {
   ]);
 
   const diff = todayEnquiriesCount - yesterdayEnquiriesCount;
-  
+
   const totalResolved = wonCount + lostCount;
   const winRate = totalResolved > 0 ? Math.round((wonCount / totalResolved) * 100) : 0;
 
@@ -63,7 +74,7 @@ export default async function DashboardPage() {
 
       {/* ── Hero Stat Cards ───────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        
+
         {/* Enquiries Card */}
         <div
           className="rounded-2xl p-6 text-white relative overflow-hidden"
@@ -81,8 +92,8 @@ export default async function DashboardPage() {
               {diff > 0
                 ? <TrendingUp size={16} className="text-green-300" />
                 : diff < 0
-                ? <TrendingDown size={16} className="text-red-300" />
-                : <Minus size={16} className="text-white/60" />
+                  ? <TrendingDown size={16} className="text-red-300" />
+                  : <Minus size={16} className="text-white/60" />
               }
               <p className="text-sm text-white/90">
                 {diff > 0 ? `+${diff}` : diff} from yesterday
@@ -119,7 +130,7 @@ export default async function DashboardPage() {
       <p className="section-label mb-3">Quick Actions</p>
       <div className="mb-8 grid grid-cols-2 md:grid-cols-3 gap-4">
         <Link
-          href="/enquiry"
+          href="/admin-enquiry"
           className="card card-hover flex flex-col items-center justify-center p-6 text-center group"
         >
           <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center mb-3 group-hover:bg-indigo-100 transition-colors">

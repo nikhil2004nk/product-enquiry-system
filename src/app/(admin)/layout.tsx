@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell } from "lucide-react";
+import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell, ShieldCheck } from "lucide-react";
 import { logoutAdmin } from "@/app/login/actions";
 import { useTransition, useState } from "react";
 
@@ -32,6 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   const adminItems = [
+    { href: "/superadmin/dashboard", icon: <ShieldCheck size={15} />, label: "Super Admin", match: (p: string) => p.startsWith("/superadmin") },
     { href: "/admin/products", icon: <Package size={15} />, label: "Manage Catalog", match: (p: string) => p.startsWith("/admin/products") },
     { href: "/users", icon: <Users size={15} />, label: "User Access", match: (p: string) => p.startsWith("/users") },
     { href: "/settings", icon: <Settings size={15} />, label: "Settings", match: (p: string) => p.startsWith("/settings") },

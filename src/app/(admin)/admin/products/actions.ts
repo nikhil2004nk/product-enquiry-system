@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/auth";
 
 export async function createCategory(formData: FormData) {
   const name = formData.get("name")?.toString().trim();
@@ -9,11 +10,15 @@ export async function createCategory(formData: FormData) {
 
   if (!name) return { error: "Category name is required" };
 
+  const session = await getSession();
+  if (!session) return { error: "Unauthorized" };
+
   try {
     await prisma.category.create({
       data: {
         name,
         catalogueUrl: catalogueUrl || null,
+        userId: session.id,
       },
     });
     revalidatePath("/admin/products");
@@ -32,6 +37,9 @@ export async function createProduct(formData: FormData) {
 
   if (!categoryId || !modelNumber) return { error: "Category and Model Number are required" };
 
+  const session = await getSession();
+  if (!session) return { error: "Unauthorized" };
+
   try {
     await prisma.product.create({
       data: {
@@ -39,6 +47,7 @@ export async function createProduct(formData: FormData) {
         modelNumber,
         productName: productName || null,
         pdfUrl: pdfUrl || null,
+        userId: session.id,
       },
     });
     revalidatePath("/admin/products");
@@ -126,6 +135,9 @@ export async function bulkImportProducts(products: {
   pdfUrl: string | null;
   active: boolean;
 }[]) {
+  const session = await getSession();
+  if (!session) return { error: "Unauthorized" };
+
   try {
     let count = 0;
     for (const p of products) {
@@ -134,7 +146,7 @@ export async function bulkImportProducts(products: {
       // Ensure category exists
       let category = await prisma.category.findUnique({ where: { name: p.categoryName } });
       if (!category) {
-        category = await prisma.category.create({ data: { name: p.categoryName } });
+        category = await prisma.category.create({ data: { name: p.categoryName, userId: session.id } });
       }
 
       // Upsert product
@@ -151,6 +163,7 @@ export async function bulkImportProducts(products: {
           productName: p.productName,
           pdfUrl: p.pdfUrl,
           active: p.active,
+          userId: session.id,
         },
       });
       count++;

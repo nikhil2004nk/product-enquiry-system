@@ -6,11 +6,19 @@ import { ResolveModalButton } from "./ResolveModalButton";
 
 export const dynamic = "force-dynamic";
 
+import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
+
 export default async function NotificationsPage({
   searchParams
 }: {
   searchParams: Promise<{ tab?: string; date?: string }>
 }) {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  const userId = session.id;
+  const isSuper = session.role === "SUPERADMIN";
+
   const params = await searchParams;
   const tab = params?.tab || "active";
   const dateFilter = params?.date || "";
@@ -25,14 +33,18 @@ export default async function NotificationsPage({
 
   if (tab === "active") {
     activeReminders = await prisma.enquiry.findMany({
-      where: { isReminderActive: true },
+      where: { 
+        isReminderActive: true,
+        ...(isSuper ? {} : { userId })
+      },
       include: { customer: true, product: true },
       orderBy: { nextReminderDate: "asc" }
     });
   } else {
     // History Tab
     const historyWhere: any = {
-      type: "REMINDER_RESOLVED"
+      type: "REMINDER_RESOLVED",
+      enquiry: { ...(isSuper ? {} : { userId }) }
     };
 
     if (dateFilter) {

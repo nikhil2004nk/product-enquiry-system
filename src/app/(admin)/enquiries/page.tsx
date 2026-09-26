@@ -13,9 +13,17 @@ import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 
+import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
+
 export default async function EnquiriesPage(props: {
   searchParams: Promise<{ q?: string; status?: string; categoryId?: string; productId?: string; source?: string; month?: string }>;
 }) {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  const userId = session.id;
+  const isSuper = session.role === "SUPERADMIN";
+
   const searchParams = await props.searchParams;
   const q = searchParams?.q || "";
   const filterStatus = searchParams?.status || "";
@@ -35,6 +43,7 @@ export default async function EnquiriesPage(props: {
 
   const enquiries = await prisma.enquiry.findMany({
     where: {
+      ...(isSuper ? {} : { userId }),
       ...(filterStatus ? { status: filterStatus as any } : {}),
       ...(filterSource ? { source: filterSource } : {}),
       ...(monthStart && monthEnd ? { createdAt: { gte: monthStart, lt: monthEnd } } : {}),
@@ -62,6 +71,7 @@ export default async function EnquiriesPage(props: {
   });
 
   const categories = await prisma.category.findMany({
+    where: { ...(isSuper ? {} : { userId }) },
     include: { products: true },
     orderBy: { name: "asc" }
   });

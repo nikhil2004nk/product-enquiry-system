@@ -1,104 +1,61 @@
-import { PrismaClient } from "@prisma/client";
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
-
-const LG_CATALOGUE_URL =
-  "https://drive.google.com/file/d/1SF_JGm1719_rFzF29dH1BXjrDjTWBApB/view?usp=drivesdk";
-
-const ledModels = [
-  "32LR653",
-  "32LB659",
-  "43NU885B",
-  "43QNED70B",
-  "50NU885B",
-  "55NU885",
-  "55QNED70",
-  "55QNED82",
-  "55QNED85",
-  "55MRGB85",
-  "55C6",
-  "55G6",
-  "65NU885",
-  "65QNED70",
-  "65QNED82",
-  "65QNED85",
-  "65MRGB85",
-  "65C6",
-  "65G6",
-  "75NU885",
-  "75QNED70",
-  "75QNED85",
-  "75MRHB85",
-  "85NU885",
-  "85QNED82",
-  "100QNED86",
-];
+import { prisma } from "../src/lib/prisma";
+import bcrypt from "bcryptjs";
 
 async function main() {
   console.log("Seeding database...");
-
-  const category = await prisma.category.upsert({
-    where: {
-      name: "LED",
-    },
-    update: {
-      catalogueUrl: LG_CATALOGUE_URL,
-      active: true,
-    },
-    create: {
-      name: "LED",
-      description: "LG LED Televisions",
-      catalogueUrl: LG_CATALOGUE_URL,
-      active: true,
-    },
-  });
-
-  console.log(`Category created/found: ${category.name}`);
-
-  for (const modelNumber of ledModels) {
-    await prisma.product.upsert({
-      where: {
-        categoryId_modelNumber: {
-          categoryId: category.id,
-          modelNumber,
-        },
-      },
-      update: {
-        active: true,
-      },
-      create: {
-        categoryId: category.id,
-        modelNumber,
-        active: true,
-      },
-    });
-  }
-
-  const bcrypt = require("bcryptjs");
-  const pinHash = await bcrypt.hash("1234", 10);
   
-  // @ts-ignore
-  await prisma.user.upsert({
+  // 1. Seed Super Admin
+  const pinHash = await bcrypt.hash("1234", 10);
+  const superAdmin = await prisma.user.upsert({
     where: { mobile: "9324302421" },
-    update: {},
+    update: {
+      name: "Nikhil kushwaha",
+      pinHash,
+      role: "SUPERADMIN"
+    },
     create: {
-      name: "Nikhil",
+      name: "Nikhil kushwaha",
       mobile: "9324302421",
       pinHash,
-    },
+      role: "SUPERADMIN"
+    }
   });
-  console.log("Admin user Nikhil seeded successfully.");
+  console.log(`✓ Super Admin user ensured: ${superAdmin.name} (${superAdmin.mobile})`);
 
-  console.log(`${ledModels.length} LED products created/updated.`);
+  // 2. Ensure default Message Template exists
+  const defaultTemplate = await prisma.messageTemplate.findFirst({ where: { isDefault: true } });
+  if (!defaultTemplate) {
+    await prisma.messageTemplate.create({
+      data: {
+        name: "Standard Reply",
+        isDefault: true,
+        content: `Hello {{customer_name}},
+
+Thank you for your interest.
+
+As per your inquiry regarding the {{model_number}}, please find the product catalogue below for your reference and detailed information.
+
+📄 Product Catalogue:
+{{catalogue_url}}
+
+Please feel free to contact me if you have any questions or require any further information.
+
+Regards,
+{{admin_name}}
+📞 {{admin_mobile}}`
+      }
+    });
+    console.log(`✓ Default Message Template created.`);
+  } else {
+    console.log(`✓ Default Message Template already exists.`);
+  }
+
+  console.log("Seeding complete!");
 }
 
 main()
-  .catch((error) => {
-    console.error("Seed failed:", error);
+  .catch((e) => {
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {

@@ -28,7 +28,7 @@ export async function loginAdmin(formData: FormData) {
   if (isValidPin) {
     const token = await signJwt({ 
       id: user.id, 
-      role: "ADMIN",
+      role: user.role,
       mobile: user.mobile 
     });
 
@@ -39,7 +39,11 @@ export async function loginAdmin(formData: FormData) {
       path: "/",
     });
     
-    redirect("/dashboard");
+    if (user.role === "SUPERADMIN") {
+      redirect("/superadmin/dashboard");
+    } else {
+      redirect("/dashboard");
+    }
   }
 
   return { error: "Invalid credentials" };

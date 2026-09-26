@@ -10,11 +10,13 @@ export async function POST(request: NextRequest) {
     // 1. Verify Authentication for "ADMIN" source
     const sessionCookie = request.cookies.get("admin_session");
     let source = "PUBLIC";
+    let adminUserId: string | null = null;
     
     if (sessionCookie?.value) {
       const payload = await verifyJwt(sessionCookie.value);
-      if (payload?.role === "ADMIN") {
-        source = "ADMIN";
+      if (payload) {
+        source = payload.role === "SUPERADMIN" ? "ADMIN" : "ADMIN"; // Both are admin sources
+        adminUserId = payload.id as string;
       }
     }
 
@@ -48,6 +50,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // If it's a public request, assign the customer to the Super Admin by default
+    if (!adminUserId) {
+      const superAdmin = await prisma.user.findFirst({ where: { role: "SUPERADMIN" } }) || await prisma.user.findFirst();
+      if (!superAdmin) return NextResponse.json({ error: "System not configured properly. No Admins found." }, { status: 500 });
+      adminUserId = superAdmin.id;
+    }
+
     // 4. Find or create customer
     const customer = await prisma.customer.upsert({
       where: { mobile },
@@ -55,6 +64,7 @@ export async function POST(request: NextRequest) {
       create: {
         name: customerName,
         mobile,
+        userId: adminUserId,
       },
     });
 
@@ -66,6 +76,9 @@ export async function POST(request: NextRequest) {
         notes,
         status: "NEW",
         source, // ADMIN or PUBLIC
+        // If public, we leave userId null so it goes to the Super Admin's "Unassigned" queue.
+        // If created by an admin, assign it to them immediately.
+        userId: source === "ADMIN" ? adminUserId : null,
       } as any,
     });
 
