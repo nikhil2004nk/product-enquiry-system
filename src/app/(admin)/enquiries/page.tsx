@@ -91,9 +91,24 @@ export default async function EnquiriesPage(props: {
     orderBy: { createdAt: "desc" },
   });
 
-  const templates = await (prisma as any).messageTemplate.findMany({
+  const effectiveUserId = isSuper && filterAdminId ? filterAdminId : userId;
+  
+  // Fetch user's templates and global templates
+  const allTemplates = await (prisma as any).messageTemplate.findMany({
+    where: {
+      OR: [
+        { userId: effectiveUserId },
+        { userId: null }
+      ]
+    },
     orderBy: { createdAt: "asc" }
   });
+  
+  // Put user's templates first so their personal default overrides the global default
+  const templates = [
+    ...allTemplates.filter((t: any) => t.userId === effectiveUserId),
+    ...allTemplates.filter((t: any) => t.userId === null)
+  ];
 
   const categories = await prisma.category.findMany({
     where: { ...(isSuper ? {} : { userId }) },

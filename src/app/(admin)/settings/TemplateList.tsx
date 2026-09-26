@@ -17,12 +17,14 @@ function TemplateItem({
   onDelete, 
   onSetDefault,
   readOnly = false,
+  isGlobal = false,
 }: { 
   t: Template;
   onEdit: (t: Template) => void;
   onDelete: (id: string) => void;
   onSetDefault: (id: string) => void;
   readOnly?: boolean;
+  isGlobal?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -35,7 +37,12 @@ function TemplateItem({
         <div className="flex items-center gap-3">
           {isExpanded ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
           <h3 className="font-bold text-gray-900">{t.name}</h3>
-          {t.isDefault && <span className="badge badge-new flex items-center gap-1"><Star size={10} className="fill-indigo-600" /> Default</span>}
+          {t.isDefault && (
+            <span className="badge badge-new flex items-center gap-1">
+              <Star size={10} className="fill-indigo-600" /> 
+              {isGlobal ? "Global Default" : "Default"}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           {!readOnly && !t.isDefault && (
@@ -197,6 +204,7 @@ export default function TemplateList({
               onDelete={readOnly ? () => {} : handleDelete} 
               onSetDefault={readOnly ? () => {} : handleSetDefault}
               readOnly={readOnly}
+              isGlobal={userId === null}
             />
           ))}
           {templates.length === 0 && !isCreating && (
