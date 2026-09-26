@@ -18,6 +18,10 @@ export default async function AdminProductsPage() {
   
   const userCondition = isSuper ? (filterAdminId ? { userId: filterAdminId } : {}) : { userId };
 
+  const viewedAdmin = isSuper && filterAdminId
+    ? await prisma.user.findUnique({ where: { id: filterAdminId }, select: { name: true } })
+    : null;
+
   const categories = await prisma.category.findMany({
     where: userCondition,
     include: { products: { orderBy: { modelNumber: "asc" } } },

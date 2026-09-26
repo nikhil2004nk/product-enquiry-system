@@ -39,6 +39,10 @@ export default async function EnquiriesPage(props: {
   const cookieStore = await cookies();
   const filterAdminId = cookieStore.get("admin_filter_id")?.value || "";
 
+  const viewedAdmin = isSuper && filterAdminId
+    ? await prisma.user.findUnique({ where: { id: filterAdminId }, select: { name: true } })
+    : null;
+
   let monthStart, monthEnd;
   if (filterMonth) {
     const [year, month] = filterMonth.split("-");
@@ -110,7 +114,7 @@ export default async function EnquiriesPage(props: {
     <div className="w-full max-w-5xl mx-auto animate-fade-up">
 
       {/* ── Header ────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Enquiries</h1>
           <p className="text-sm text-gray-400">
@@ -118,6 +122,12 @@ export default async function EnquiriesPage(props: {
             {q ? ` for "${q}"` : ""}
           </p>
         </div>
+        {viewedAdmin && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-sm shrink-0">
+            <span className="text-indigo-400 font-medium">Viewing as</span>
+            <span className="font-bold text-indigo-700">{viewedAdmin.name}</span>
+          </div>
+        )}
       </div>
 
       {/* ── Search & Filters ──────────────────────────────── */}

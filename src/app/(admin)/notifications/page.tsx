@@ -29,6 +29,10 @@ export default async function NotificationsPage({
 
   const userCondition = isSuper ? (filterAdminId ? { userId: filterAdminId } : {}) : { userId };
 
+  const viewedAdmin = isSuper && filterAdminId
+    ? await prisma.user.findUnique({ where: { id: filterAdminId }, select: { name: true } })
+    : null;
+
   const now = new Date();
 
   const endOfToday = new Date(now);
@@ -124,6 +128,12 @@ export default async function NotificationsPage({
             <p className="text-sm text-gray-400 mt-0.5">Manage your upcoming and pending follow-ups.</p>
           </div>
         </div>
+        {viewedAdmin && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-sm">
+            <span className="text-indigo-400 font-medium">Viewing as</span>
+            <span className="font-bold text-indigo-700">{viewedAdmin.name}</span>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}

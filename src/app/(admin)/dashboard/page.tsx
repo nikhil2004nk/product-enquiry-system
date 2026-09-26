@@ -21,6 +21,11 @@ export default async function DashboardPage() {
   // Base where condition for queries
   const userCondition = isSuper ? (filterAdminId ? { userId: filterAdminId } : {}) : { userId };
 
+  // Fetch the viewed admin's name for the banner
+  const viewedAdmin = isSuper && filterAdminId
+    ? await prisma.user.findUnique({ where: { id: filterAdminId }, select: { name: true } })
+    : null;
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -79,6 +84,12 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{timeGreeting()} 👋</h1>
           <p className="text-sm text-gray-400 mt-0.5">Here's what's happening in your business today.</p>
         </div>
+        {viewedAdmin && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-sm">
+            <span className="text-indigo-400 font-medium">Viewing as</span>
+            <span className="font-bold text-indigo-700">{viewedAdmin.name}</span>
+          </div>
+        )}
       </div>
 
       {/* ── Hero Stat Cards ───────────────────────────────── */}
