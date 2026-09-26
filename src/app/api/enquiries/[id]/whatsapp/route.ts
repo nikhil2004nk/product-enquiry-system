@@ -22,8 +22,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Auth
     const sessionCookie = request.cookies.get("admin_session");
-    let adminName = "Store Assistant";
-    let adminMobile = "Our Store";
+    let adminName = "Sales Assistant";
+    let adminMobile = "Our Business";
 
     if (sessionCookie?.value) {
       const payload = await verifyJwt(sessionCookie.value);
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const defaultTemplate = `Hello {{customer_name}},
 
-Thank you for visiting our store.
+Thank you for your interest.
 
 As per your inquiry regarding the {{model_number}}, please find the product catalogue below for your reference and detailed information.
 

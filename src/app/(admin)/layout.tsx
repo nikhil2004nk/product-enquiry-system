@@ -97,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Footer */}
         <div className="px-4 py-2.5 border-t border-white/10">
-          <p className="text-white/20 text-center" style={{ fontSize: 10 }}>Store CRM · v2.0</p>
+          <p className="text-white/20 text-center" style={{ fontSize: 10 }}>Enquiry CRM · v2.0</p>
         </div>
       </aside>
 

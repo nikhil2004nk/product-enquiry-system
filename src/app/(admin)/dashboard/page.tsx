@@ -37,7 +37,7 @@ export default async function DashboardPage() {
       {/* ── Header ────────────────────────────────────────── */}
       <div className="mb-7">
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{timeGreeting()} 👋</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Here's what's happening at your store today.</p>
+        <p className="text-sm text-gray-400 mt-0.5">Here's what's happening in your business today.</p>
       </div>
 
       {/* ── Hero Stat Card ───────────────────────────────── */}

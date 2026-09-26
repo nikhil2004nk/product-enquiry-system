@@ -67,7 +67,7 @@ export default function LoginPage() {
           >
             <Zap size={26} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Store Assistant</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Enquiry CRM</h1>
           <p className="text-sm text-gray-400 mt-1">Sign in to access the dashboard</p>
         </div>
 

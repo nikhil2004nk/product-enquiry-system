@@ -26,7 +26,7 @@ export default async function PublicEnquiryPage() {
           >
             <Zap size={26} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Store Enquiry</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">New Enquiry</h1>
           <p className="text-sm text-gray-400 mt-1">Fill in your details and we'll get back to you shortly</p>
         </div>
 

@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Store CRM Assistant",
+  title: "Enquiry CRM",
   description: "Mobile CRM for Sales",
 };
 
