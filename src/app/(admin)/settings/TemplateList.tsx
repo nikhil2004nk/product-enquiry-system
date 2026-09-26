@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createTemplate, updateTemplate, deleteTemplate, setDefaultTemplate } from "./actions";
-import { MessageSquare, Save, CheckCircle2, Trash2, Edit2, Plus, Star, ChevronDown, ChevronUp } from "lucide-react";
+import { Save, Trash2, Edit2, Plus, Star, ChevronDown, ChevronUp } from "lucide-react";
 
 type Template = {
   id: string;
@@ -15,12 +15,14 @@ function TemplateItem({
   t, 
   onEdit, 
   onDelete, 
-  onSetDefault 
+  onSetDefault,
+  readOnly = false,
 }: { 
-  t: Template, 
-  onEdit: (t: Template) => void, 
-  onDelete: (id: string) => void, 
-  onSetDefault: (id: string) => void 
+  t: Template;
+  onEdit: (t: Template) => void;
+  onDelete: (id: string) => void;
+  onSetDefault: (id: string) => void;
+  readOnly?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -36,11 +38,18 @@ function TemplateItem({
           {t.isDefault && <span className="badge badge-new flex items-center gap-1"><Star size={10} className="fill-indigo-600" /> Default</span>}
         </div>
         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          {!t.isDefault && (
+          {!readOnly && !t.isDefault && (
             <button onClick={() => onSetDefault(t.id)} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded transition-colors">Set Default</button>
           )}
-          <button onClick={() => onEdit(t)} className="text-gray-400 hover:text-indigo-600 p-1 transition-colors"><Edit2 size={16} /></button>
-          <button onClick={() => onDelete(t.id)} className="text-gray-400 hover:text-red-600 p-1 transition-colors"><Trash2 size={16} /></button>
+          {!readOnly && (
+            <>
+              <button onClick={() => onEdit(t)} className="text-gray-400 hover:text-indigo-600 p-1 transition-colors"><Edit2 size={16} /></button>
+              <button onClick={() => onDelete(t.id)} className="text-gray-400 hover:text-red-600 p-1 transition-colors"><Trash2 size={16} /></button>
+            </>
+          )}
+          {readOnly && (
+            <span className="text-xs text-gray-400 font-medium px-2">Read-only</span>
+          )}
         </div>
       </div>
       
@@ -53,9 +62,25 @@ function TemplateItem({
   );
 }
 
-export default function TemplateList({ templates }: { templates: Template[] }) {
+type TemplateListProps = {
+  templates: Template[];
+  userId: string | null;
+  label?: string;
+  sublabel?: string;
+  showAddOnly?: boolean;
+  readOnly?: boolean;
+};
+
+export default function TemplateList({ 
+  templates, 
+  userId, 
+  label = "Templates",
+  sublabel,
+  showAddOnly = false,
+  readOnly = false,
+}: TemplateListProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const [isCreating, setIsCreating] = useState(showAddOnly);
   
   const [formData, setFormData] = useState({ name: "", content: "" });
   const [isPending, startTransition] = useTransition();
@@ -73,8 +98,9 @@ export default function TemplateList({ templates }: { templates: Template[] }) {
   };
 
   const handleCancel = () => {
-    setIsCreating(false);
+    setIsCreating(showAddOnly ? true : false); // keep open if showAddOnly
     setEditingId(null);
+    setFormData({ name: "", content: "" });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -82,6 +108,10 @@ export default function TemplateList({ templates }: { templates: Template[] }) {
     const data = new FormData();
     data.set("name", formData.name);
     data.set("content", formData.content);
+    if (userId !== undefined && userId !== null) {
+      data.set("userId", userId);
+    }
+    // userId === null means global template
 
     startTransition(async () => {
       if (isCreating) {
@@ -89,28 +119,36 @@ export default function TemplateList({ templates }: { templates: Template[] }) {
       } else if (editingId) {
         await updateTemplate(editingId, data);
       }
-      handleCancel();
+      setEditingId(null);
+      setFormData({ name: "", content: "" });
+      if (!showAddOnly) setIsCreating(false);
     });
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this template?")) {
-      startTransition(() => { deleteTemplate(id); });
-    }
+    startTransition(() => { deleteTemplate(id); });
   };
 
   const handleSetDefault = (id: string) => {
-    startTransition(() => { setDefaultTemplate(id); });
+    startTransition(() => { setDefaultTemplate(id, userId); });
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <button onClick={handleCreate} className="btn btn-primary btn-sm">
-          <Plus size={16} /> New Template
-        </button>
+    <div className="space-y-4">
+      {/* Section header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="section-label !mb-0">{label}</p>
+          {sublabel && <p className="text-xs text-gray-400 mt-0.5">{sublabel}</p>}
+        </div>
+        {!showAddOnly && !readOnly && (
+          <button onClick={handleCreate} className="btn btn-primary btn-sm">
+            <Plus size={14} /> New
+          </button>
+        )}
       </div>
 
+      {/* Create / Edit Form */}
       {(isCreating || editingId) && (
         <form onSubmit={handleSave} className="card p-5 border border-indigo-200 bg-indigo-50/30">
           <h3 className="font-bold text-gray-900 mb-4">{isCreating ? "Create Template" : "Edit Template"}</h3>
@@ -137,7 +175,9 @@ export default function TemplateList({ templates }: { templates: Template[] }) {
               />
             </div>
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={handleCancel} className="btn bg-white border border-gray-200 text-gray-600 hover:bg-gray-50">Cancel</button>
+              {!showAddOnly && (
+                <button type="button" onClick={handleCancel} className="btn bg-white border border-gray-200 text-gray-600 hover:bg-gray-50">Cancel</button>
+              )}
               <button type="submit" disabled={isPending} className="btn btn-primary">
                 {isPending ? "Saving..." : "Save"}
               </button>
@@ -146,20 +186,24 @@ export default function TemplateList({ templates }: { templates: Template[] }) {
         </form>
       )}
 
-      <div className="space-y-4">
-        {templates.map(t => (
-          <TemplateItem 
-            key={t.id} 
-            t={t} 
-            onEdit={handleEdit} 
-            onDelete={handleDelete} 
-            onSetDefault={handleSetDefault} 
-          />
-        ))}
-        {templates.length === 0 && !isCreating && (
-          <div className="text-center p-8 text-gray-500">No templates found. Create one above!</div>
-        )}
-      </div>
+      {/* Template List */}
+      {!showAddOnly && (
+        <div className="space-y-3">
+          {templates.map(t => (
+            <TemplateItem 
+              key={t.id} 
+              t={t} 
+              onEdit={readOnly ? () => {} : handleEdit} 
+              onDelete={readOnly ? () => {} : handleDelete} 
+              onSetDefault={readOnly ? () => {} : handleSetDefault}
+              readOnly={readOnly}
+            />
+          ))}
+          {templates.length === 0 && !isCreating && (
+            <div className="text-center p-8 text-gray-400 text-sm card">No templates yet. Create one above!</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

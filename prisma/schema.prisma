@@ -112,10 +112,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  categories Category[]
-  products   Product[]
-  customers  Customer[]
-  enquiries  Enquiry[]
+  categories        Category[]
+  products          Product[]
+  customers         Customer[]
+  enquiries         Enquiry[]
+  messageTemplates  MessageTemplate[]
 }
 
 model MessageTemplate {
@@ -123,6 +124,8 @@ model MessageTemplate {
   name      String
   content   String
   isDefault Boolean  @default(false)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

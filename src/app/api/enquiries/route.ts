@@ -87,13 +87,22 @@ export async function POST(request: NextRequest) {
     // 6. Generate WhatsApp message
     const catalogueUrl = product.pdfUrl || product.category.catalogueUrl || "Not available";
     
-    // Fetch template from settings or use default
+    // Fetch template: priority = explicit templateId > admin's own default > global (Super Admin) default
     let templateSetting = null;
     if (templateId) {
       templateSetting = await (prisma as any).messageTemplate.findUnique({ where: { id: templateId } });
     }
+    if (!templateSetting && adminUserId) {
+      // Try admin's own default template first
+      templateSetting = await (prisma as any).messageTemplate.findFirst({
+        where: { isDefault: true, userId: adminUserId }
+      });
+    }
     if (!templateSetting) {
-      templateSetting = await (prisma as any).messageTemplate.findFirst({ where: { isDefault: true } });
+      // Fall back to global default (Super Admin's template with userId null)
+      templateSetting = await (prisma as any).messageTemplate.findFirst({
+        where: { isDefault: true, userId: null }
+      });
     }
     const defaultTemplate = `Hello {{customer_name}},
 

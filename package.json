@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "setup": "prisma db push && prisma db seed",
+    "dev": "prisma db push && prisma generate && prisma db seed && next dev",
+    "setup": "prisma db push && prisma generate && prisma db seed",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

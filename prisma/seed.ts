@@ -22,13 +22,16 @@ async function main() {
   });
   console.log(`✓ Super Admin user ensured: ${superAdmin.name} (${superAdmin.mobile})`);
 
-  // 2. Ensure default Message Template exists
-  const defaultTemplate = await prisma.messageTemplate.findFirst({ where: { isDefault: true } });
+  // 2. Ensure global default Message Template exists (userId: null = global fallback for all admins)
+  const defaultTemplate = await (prisma as any).messageTemplate.findFirst({
+    where: { isDefault: true, userId: null }
+  });
   if (!defaultTemplate) {
-    await prisma.messageTemplate.create({
+    await (prisma as any).messageTemplate.create({
       data: {
         name: "Standard Reply",
         isDefault: true,
+        userId: null,
         content: `Hello {{customer_name}},
 
 Thank you for your interest.
@@ -45,9 +48,9 @@ Regards,
 📞 {{admin_mobile}}`
       }
     });
-    console.log(`✓ Default Message Template created.`);
+    console.log(`✓ Global default Message Template created.`);
   } else {
-    console.log(`✓ Default Message Template already exists.`);
+    console.log(`✓ Global default Message Template already exists.`);
   }
 
   console.log("Seeding complete!");

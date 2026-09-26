@@ -10,13 +10,15 @@ import bcrypt from "bcryptjs";
 export async function createTemplate(formData: FormData) {
   const name = formData.get("name")?.toString().trim();
   const content = formData.get("content")?.toString().trim();
+  const userId = formData.get("userId")?.toString() || null; // null = global (Super Admin)
 
   if (!name || !content) return { error: "Name and Content are required" };
 
-  const count = await (prisma as any).messageTemplate.count();
+  // First template for this user becomes their default
+  const count = await (prisma as any).messageTemplate.count({ where: { userId } });
   
   await (prisma as any).messageTemplate.create({
-    data: { name, content, isDefault: count === 0 },
+    data: { name, content, isDefault: count === 0, userId },
   });
 
   revalidatePath("/settings");
@@ -44,13 +46,16 @@ export async function deleteTemplate(id: string) {
   return { success: true };
 }
 
-export async function setDefaultTemplate(id: string) {
+export async function setDefaultTemplate(id: string, userId: string | null) {
+  // Only unset default for same user's templates (userId scoping)
   await prisma.$transaction([
-    (prisma as any).messageTemplate.updateMany({ data: { isDefault: false } }),
+    (prisma as any).messageTemplate.updateMany({
+      where: { userId },
+      data: { isDefault: false }
+    }),
     (prisma as any).messageTemplate.update({ where: { id }, data: { isDefault: true } }),
   ]);
   
-  revalidatePath("/settings");
   revalidatePath("/settings");
   return { success: true };
 }

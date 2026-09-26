@@ -36,6 +36,12 @@ export default async function AdminProductsPage() {
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Manage Catalog</h1>
           <p className="text-sm text-gray-400">Add, edit, and manage products and categories</p>
         </div>
+        {viewedAdmin && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-sm shrink-0">
+            <span className="text-indigo-400 font-medium">Viewing as</span>
+            <span className="font-bold text-indigo-700">{viewedAdmin.name}</span>
+          </div>
+        )}
       </div>
 
       <ProductManager categories={categories} isSuper={isSuper} />
