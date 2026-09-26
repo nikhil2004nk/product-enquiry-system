@@ -5,6 +5,7 @@ import SearchBar from "./SearchBar";
 import WhatsappButton from "./WhatsappButton";
 import ProductFilter from "./ProductFilter";
 import SourceFilter from "./SourceFilter";
+import MonthFilter from "./MonthFilter";
 import DeleteEnquiryButton from "./DeleteEnquiryButton";
 import { ArrowLeft, MessageSquare, Inbox } from "lucide-react";
 import { Suspense } from "react";
@@ -12,7 +13,7 @@ import { Suspense } from "react";
 export const dynamic = "force-dynamic";
 
 export default async function EnquiriesPage(props: {
-  searchParams: Promise<{ q?: string; status?: string; categoryId?: string; productId?: string; source?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; categoryId?: string; productId?: string; source?: string; month?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const q = searchParams?.q || "";
@@ -20,11 +21,22 @@ export default async function EnquiriesPage(props: {
   const filterCategoryId = searchParams?.categoryId || "";
   const filterProductId = searchParams?.productId || "";
   const filterSource = searchParams?.source || "";
+  const filterMonth = searchParams?.month || "";
+
+  let monthStart, monthEnd;
+  if (filterMonth) {
+    const [year, month] = filterMonth.split("-");
+    if (year && month) {
+      monthStart = new Date(parseInt(year), parseInt(month) - 1, 1);
+      monthEnd = new Date(parseInt(year), parseInt(month), 1);
+    }
+  }
 
   const enquiries = await prisma.enquiry.findMany({
     where: {
       ...(filterStatus ? { status: filterStatus as any } : {}),
       ...(filterSource ? { source: filterSource } : {}),
+      ...(monthStart && monthEnd ? { createdAt: { gte: monthStart, lt: monthEnd } } : {}),
       ...(filterProductId 
         ? { productId: filterProductId } 
         : filterCategoryId 
@@ -60,7 +72,7 @@ export default async function EnquiriesPage(props: {
     CLOSED:    { label: "Closed",    cls: "badge badge-closed" },
   };
 
-  const hasFilters = q !== "" || filterStatus !== "" || filterCategoryId !== "" || filterProductId !== "" || filterSource !== "";
+  const hasFilters = q !== "" || filterStatus !== "" || filterCategoryId !== "" || filterProductId !== "" || filterSource !== "" || filterMonth !== "";
 
   return (
     <div className="w-full max-w-5xl mx-auto animate-fade-up">
@@ -78,8 +90,8 @@ export default async function EnquiriesPage(props: {
 
       {/* ── Search & Filters ──────────────────────────────── */}
       <div className="mb-6 space-y-4">
-        <div className="flex flex-col md:flex-row gap-3 items-center">
-          <div className="flex-1 w-full">
+        <div className="flex flex-col md:flex-row flex-wrap gap-3 items-start md:items-center">
+          <div className="w-full md:flex-1 md:min-w-[240px]">
             <Suspense fallback={<div className="input !pl-10 text-gray-400">Loading search…</div>}>
               <SearchBar filterStatus={filterStatus} />
             </Suspense>
@@ -94,10 +106,15 @@ export default async function EnquiriesPage(props: {
               <SourceFilter />
             </Suspense>
           </div>
+          <div className="w-full md:w-auto">
+            <Suspense fallback={<div>Loading filters...</div>}>
+              <MonthFilter />
+            </Suspense>
+          </div>
           {hasFilters && (
             <Link 
               href="/enquiries"
-              className="flex items-center justify-center px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-xl text-[13px] transition-colors shrink-0 w-full md:w-auto h-10 md:h-[42px]"
+              className="flex items-center justify-center px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-xl text-[13px] transition-colors shrink-0 w-full sm:w-48 h-10"
             >
               Clear Filters
             </Link>
@@ -134,7 +151,7 @@ export default async function EnquiriesPage(props: {
             <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-xs uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Product Interest</th>
+                <th className="px-6 py-4">Offering Interest</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Date</th>
                 <th className="px-6 py-4 text-right">Actions</th>

@@ -25,7 +25,7 @@ export default function ProductFilter({ categories }: { categories: Category[] }
     : categories.flatMap(c => c.products);
 
   const productOptions = [
-    { value: "", label: "All Models" },
+    { value: "", label: "All Items" },
     ...products.map(p => ({ value: p.id, label: p.modelNumber }))
   ];
 
