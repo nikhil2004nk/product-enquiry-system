@@ -16,7 +16,7 @@ export default async function DashboardPage() {
     prisma.enquiry.count({ where: { createdAt: { gte: today } } }),
     prisma.enquiry.count({ where: { createdAt: { gte: yesterday, lt: today } } }),
     prisma.enquiry.findMany({
-      take: 6,
+      take: 3,
       orderBy: { createdAt: "desc" },
       include: { customer: true, product: { include: { category: true } } },
     }),
@@ -146,32 +146,39 @@ export default async function DashboardPage() {
       {/* ── Priority Follow-ups ───────────────────────────── */}
       {(todaysFollowUps.length > 0 || overdueFollowUps.length > 0) && (
         <>
-          <div className="flex items-center gap-2 mb-3">
-            <Bell size={18} className="text-indigo-600" />
-            <p className="section-label !mb-0">Priority Follow-ups</p>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Bell size={18} className="text-indigo-600" />
+              <p className="section-label !mb-0">Priority Follow-ups</p>
+            </div>
+            {(todaysFollowUps.length + overdueFollowUps.length) > 3 && (
+              <Link href="/notifications" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                View all →
+              </Link>
+            )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {overdueFollowUps.map((enq: any) => (
+            {overdueFollowUps.slice(0, 3).map((enq: any) => (
               <Link key={enq.id} href={`/customers/${enq.customerId}`} className="card p-4 border-l-4 border-l-red-500 hover:border-l-red-600 group">
                 <div className="flex items-start justify-between">
                   <div>
                     <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{enq.customer.name}</h4>
                     <p className="text-xs text-gray-500 mt-1">{enq.nextReminderNote}</p>
                   </div>
-                  <div className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded text-[10px] font-bold">
+                  <div className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded text-[10px] font-bold shrink-0">
                     <AlertTriangle size={12} /> Overdue
                   </div>
                 </div>
               </Link>
             ))}
-            {todaysFollowUps.map((enq: any) => (
+            {todaysFollowUps.slice(0, Math.max(0, 3 - overdueFollowUps.length)).map((enq: any) => (
               <Link key={enq.id} href={`/customers/${enq.customerId}`} className="card p-4 border-l-4 border-l-indigo-500 hover:border-l-indigo-600 group">
                 <div className="flex items-start justify-between">
                   <div>
                     <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{enq.customer.name}</h4>
                     <p className="text-xs text-gray-500 mt-1">{enq.nextReminderNote}</p>
                   </div>
-                  <div className="text-indigo-600 bg-indigo-50 px-2 py-1 rounded text-[10px] font-bold">
+                  <div className="text-indigo-600 bg-indigo-50 px-2 py-1 rounded text-[10px] font-bold shrink-0">
                     Today
                   </div>
                 </div>
@@ -211,7 +218,7 @@ export default async function DashboardPage() {
                     {enq.product.modelNumber} · {enq.product.category.name}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "numeric" }).format(new Date(enq.createdAt))}
+                    {new Intl.DateTimeFormat("en-US", { timeZone: 'Asia/Kolkata', month: "short", day: "numeric", hour: "numeric", minute: "numeric" }).format(new Date(enq.createdAt))}
                   </p>
                 </div>
               </div>

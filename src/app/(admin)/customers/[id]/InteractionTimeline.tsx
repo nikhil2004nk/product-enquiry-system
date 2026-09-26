@@ -69,7 +69,7 @@ export default function InteractionTimeline({
             <div>
               <p className="text-xs font-bold text-indigo-900">Reminder Set</p>
               <p className="text-xs text-indigo-700 mt-0.5">
-                {new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(nextReminderDate))}
+                {new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(nextReminderDate))}
               </p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function InteractionTimeline({
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-bold text-slate-900 text-xs uppercase tracking-wider">{interaction.type.replace("_", " ")}</span>
                     <span className="text-[10px] font-bold text-slate-400">
-                      {new Intl.DateTimeFormat('en-IN', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' }).format(new Date(interaction.createdAt))}
+                      {new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' }).format(new Date(interaction.createdAt))}
                     </span>
                   </div>
                   {interaction.outcome && (

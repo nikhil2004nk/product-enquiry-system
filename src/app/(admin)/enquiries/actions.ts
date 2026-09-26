@@ -65,7 +65,7 @@ export async function setReminder(enquiryId: string, date: Date, note: string) {
       data: {
         enquiryId,
         type: "REMINDER_SET",
-        notes: `Reminder set for ${new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(date)}: ${note}`
+        notes: `Reminder set for ${new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }).format(date)}: ${note}`
       }
     });
 
@@ -126,16 +126,7 @@ export async function resolveReminder(
       });
     }
 
-    // 4. Log new reminder if set
-    if (nextDate) {
-      await prisma.interaction.create({
-        data: {
-          enquiryId,
-          type: "REMINDER_SET",
-          notes: `Reminder set for ${new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(nextDate)}${finalNextNote ? `: ${finalNextNote}` : ""}`
-        }
-      });
-    }
+          notes: `Reminder set for ${new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }).format(nextDate)}${finalNextNote ? `: ${finalNextNote}` : ""}`
 
     revalidatePath("/enquiries");
     revalidatePath("/dashboard");

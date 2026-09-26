@@ -102,7 +102,7 @@ export function CustomDateTimePicker({ value, onChange, placeholder = "Select Da
     );
   }
 
-  const formattedValue = value ? new Intl.DateTimeFormat("en-IN", {
+  const formattedValue = value ? new Intl.DateTimeFormat("en-IN", { timeZone: 'Asia/Kolkata',
     day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "numeric", hour12: true
   }).format(value) : "";
 
@@ -121,7 +121,7 @@ export function CustomDateTimePicker({ value, onChange, placeholder = "Select Da
           <ChevronLeft size={18} />
         </button>
         <span className="font-bold text-gray-900 text-sm tracking-tight">
-          {new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(viewDate)}
+          {new Intl.DateTimeFormat("en-US", { timeZone: 'Asia/Kolkata', month: "long", year: "numeric" }).format(viewDate)}
         </span>
         <button type="button" onClick={handleNextMonth} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
           <ChevronRight size={18} />

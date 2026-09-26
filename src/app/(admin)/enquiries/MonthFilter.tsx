@@ -84,7 +84,7 @@ export default function MonthFilter() {
   if (currentMonthParam) {
     const [y, m] = currentMonthParam.split("-");
     const date = new Date(parseInt(y), parseInt(m) - 1, 1);
-    displayText = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(date);
+    displayText = new Intl.DateTimeFormat("en-US", { timeZone: 'Asia/Kolkata', month: "long", year: "numeric" }).format(date);
   }
 
   return (

@@ -86,7 +86,7 @@ export default async function NotificationsPage({
         <div className="flex md:flex-col items-center md:items-end justify-between border-t border-gray-100 md:border-t-0 pt-3 md:pt-0">
           <div className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 ${badgeColor}`}>
             <Clock size={14} />
-            {new Intl.DateTimeFormat('en-IN', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).format(enq.nextReminderDate)}
+            {new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).format(enq.nextReminderDate)}
           </div>
           <ResolveModalButton enquiryId={enq.id} customerName={enq.customer.name} />
         </div>
@@ -177,7 +177,7 @@ export default async function NotificationsPage({
                 <div>
                   <h4 className="font-bold text-gray-900 group-hover:text-indigo-600">{intx.enquiry.customer.name}</h4>
                   <p className="text-xs font-semibold text-gray-500 mt-0.5">
-                    {new Intl.DateTimeFormat('en-IN', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).format(intx.createdAt)} 
+                    {new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }).format(intx.createdAt)} 
                     <span className="mx-2">•</span> 
                     Outcome: <span className="text-indigo-600">{intx.outcome}</span>
                   </p>

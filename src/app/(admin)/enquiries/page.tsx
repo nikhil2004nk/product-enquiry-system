@@ -208,7 +208,7 @@ export default async function EnquiriesPage(props: {
                     {/* Date */}
                     <td className="px-6 py-4">
                       <span className="text-xs text-gray-500">
-                        {new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "numeric" }).format(new Date(enq.createdAt))}
+                        {new Intl.DateTimeFormat("en-IN", { timeZone: 'Asia/Kolkata', day: "numeric", month: "short", hour: "numeric", minute: "numeric" }).format(new Date(enq.createdAt))}
                       </span>
                     </td>
 
@@ -264,7 +264,7 @@ export default async function EnquiriesPage(props: {
                 </div>
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-gray-400 text-right pr-2">
-                    {new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short" }).format(new Date(enq.createdAt))}
+                    {new Intl.DateTimeFormat("en-IN", { timeZone: 'Asia/Kolkata', day: "numeric", month: "short" }).format(new Date(enq.createdAt))}
                   </p>
                   <ReminderButton enquiryId={enq.id} isActive={enq.isReminderActive} />
                 </div>

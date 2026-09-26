@@ -97,7 +97,7 @@ export default async function CustomerHistoryPage({
           ) : (
             <div className="space-y-3">
               {customer.enquiries.map((enq: any) => {
-                const date = new Intl.DateTimeFormat("en-IN", {
+                const date = new Intl.DateTimeFormat("en-IN", { timeZone: 'Asia/Kolkata',
                   day: "numeric",
                   month: "short",
                   year: "numeric",
