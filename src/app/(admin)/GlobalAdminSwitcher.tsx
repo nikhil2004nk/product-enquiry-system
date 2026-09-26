@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition, useRef } from "react";
 import { getAdmins, setAdminFilter } from "./actions";
 import { Users, ChevronDown, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function GlobalAdminSwitcher() {
   const [admins, setAdmins] = useState<{ id: string; name: string }[]>([]);
@@ -10,10 +11,20 @@ export function GlobalAdminSwitcher() {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const match = document.cookie.match(/(^| )admin_filter_id=([^;]+)/);
-    if (match) setCurrentAdmin(match[2]);
+    // Read from localStorage for immediate client-side UI sync
+    const saved = localStorage.getItem("admin_filter_id");
+    if (saved) setCurrentAdmin(saved);
+    else {
+      // Fallback to cookie
+      const match = document.cookie.match(/(^| )admin_filter_id=([^;]+)/);
+      if (match) {
+        setCurrentAdmin(match[2]);
+        localStorage.setItem("admin_filter_id", match[2]);
+      }
+    }
 
     getAdmins().then(setAdmins);
 
@@ -26,10 +37,9 @@ export function GlobalAdminSwitcher() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (admins.length === 0) return null;
 
   return (
-    <div className="px-2.5 mb-2 mt-4">
+    <div className="mb-5">
       <p className="px-3 pt-1 pb-1.5 font-bold uppercase tracking-widest text-white/30" style={{ fontSize: 9.5 }}>
         Viewing As
       </p>
@@ -39,10 +49,12 @@ export function GlobalAdminSwitcher() {
           disabled={isPending}
           className="w-full flex items-center justify-between bg-white/10 hover:bg-white/15 transition-colors text-white border-0 rounded-xl px-3 py-2 text-xs font-semibold disabled:opacity-50"
         >
-          <div className="flex items-center gap-2">
-            <Users size={14} className="text-indigo-300" />
+          <div className="flex items-center gap-2 overflow-hidden">
+            <Users size={14} className="text-indigo-300 shrink-0" />
             <span className="truncate">
-              {currentAdmin === "" ? "All Admins (Mixed)" : admins.find(a => a.id === currentAdmin)?.name || "Unknown"}
+              {currentAdmin === "" 
+                ? "All Admins (Mixed)" 
+                : admins.find(a => a.id === currentAdmin)?.name || "Loading..."}
             </span>
           </div>
           {isPending ? (
@@ -58,9 +70,11 @@ export function GlobalAdminSwitcher() {
               onClick={() => {
                 setIsOpen(false);
                 setCurrentAdmin("");
+                localStorage.removeItem("admin_filter_id");
                 startTransition(async () => {
                   await setAdminFilter("");
-                  window.location.reload();
+                  router.refresh(); // Soft refresh Next.js cache
+                  setTimeout(() => window.location.reload(), 100); // Hard refresh to ensure everything syncs
                 });
               }}
               className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center justify-between transition-colors text-gray-900"
@@ -74,9 +88,11 @@ export function GlobalAdminSwitcher() {
                 onClick={() => {
                   setIsOpen(false);
                   setCurrentAdmin(admin.id);
+                  localStorage.setItem("admin_filter_id", admin.id);
                   startTransition(async () => {
                     await setAdminFilter(admin.id);
-                    window.location.reload();
+                    router.refresh();
+                    setTimeout(() => window.location.reload(), 100);
                   });
                 }}
                 className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center justify-between transition-colors text-gray-900"

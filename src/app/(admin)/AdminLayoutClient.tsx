@@ -2,15 +2,24 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell, ShieldCheck } from "lucide-react";
+import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell, ShieldCheck, Menu, X } from "lucide-react";
 import { logoutAdmin } from "@/app/login/actions";
 import { useTransition, useState, useEffect } from "react";
 import { GlobalAdminSwitcher } from "./GlobalAdminSwitcher";
 
-export default function AdminLayoutClient({ children, role }: { children: React.ReactNode, role: string | null }) {
+export default function AdminLayoutClient({ 
+  children, 
+  role, 
+  isViewingAsAdmin = false 
+}: { 
+  children: React.ReactNode;
+  role: string | null;
+  isViewingAsAdmin?: boolean;
+}) {
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleCopyPublicLink = () => {
     const url = `${window.location.origin}/enquiry`;
@@ -33,7 +42,7 @@ export default function AdminLayoutClient({ children, role }: { children: React.
   ];
 
   const adminItems = [
-    ...(role === "SUPERADMIN" ? [
+    ...(role === "SUPERADMIN" && !isViewingAsAdmin ? [
       { href: "/superadmin/dashboard", icon: <ShieldCheck size={15} />, label: "Super Admin", match: (p: string) => p.startsWith("/superadmin") },
       { href: "/users", icon: <Users size={15} />, label: "User Access", match: (p: string) => p.startsWith("/users") }
     ] : []),
@@ -120,34 +129,14 @@ export default function AdminLayoutClient({ children, role }: { children: React.
             <span className="font-bold text-gray-900" style={{ fontSize: 13 }}>Enquiry CRM</span>
           </div>
           <div className="flex items-center gap-0.5">
-            <button
-              onClick={handleCopyPublicLink}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-indigo-500 hover:bg-indigo-50 transition-colors"
-              title="Copy Public Link"
-            >
-              {copied ? <Check size={16} className="text-green-500" /> : <LinkIcon size={16} />}
-            </button>
             <Link href="/notifications" className="w-8 h-8 flex items-center justify-center rounded-lg text-indigo-500 hover:bg-indigo-50 transition-colors" title="Notifications">
               <Bell size={16} />
             </Link>
-            <Link href="/admin/products" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Catalog">
-              <Package size={16} />
-            </Link>
-            {role === "SUPERADMIN" && (
-              <Link href="/users" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Users">
-                <Users size={16} />
-              </Link>
-            )}
-            <Link href="/settings" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Settings">
-              <Settings size={16} />
-            </Link>
             <button
-              onClick={handleLogout}
-              disabled={isPending}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-50"
-              title="Sign Out"
+              onClick={() => setMobileMenuOpen(true)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
             >
-              <LogOut size={16} />
+              <Menu size={20} />
             </button>
           </div>
         </header>
@@ -157,6 +146,74 @@ export default function AdminLayoutClient({ children, role }: { children: React.
           {children}
         </main>
       </div>
+
+      {/* ── Mobile Slide-out Menu ─────────────────────────────── */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-[100] flex">
+          {/* Backdrop */}
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          
+          {/* Sidebar Drawer */}
+          <aside className="relative w-64 max-w-[80vw] h-full shadow-2xl flex flex-col animate-fade-in" style={{ background: "var(--sidebar)" }}>
+            <div className="flex h-12 items-center justify-between px-5 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-lg bg-indigo-500 flex items-center justify-center shadow">
+                  <Zap size={13} className="text-white" />
+                </div>
+                <span className="text-white font-bold tracking-tight" style={{ fontSize: 13 }}>Menu</span>
+              </div>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 text-white/50 hover:text-white rounded-lg transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <nav className="flex-1 px-2.5 py-4 flex flex-col gap-0.5 overflow-y-auto">
+              {role === "SUPERADMIN" && <GlobalAdminSwitcher />}
+              
+              <SidebarLabel>Main</SidebarLabel>
+              {navItems.map((item) => (
+                <div key={item.href} onClick={() => setMobileMenuOpen(false)}>
+                  <NavItem href={item.href} icon={item.icon} label={item.label} active={item.match(pathname)} />
+                </div>
+              ))}
+
+              <div className="pt-4">
+                <SidebarLabel>Admin</SidebarLabel>
+              </div>
+              {adminItems.map((item) => (
+                <div key={item.href} onClick={() => setMobileMenuOpen(false)}>
+                  <NavItem href={item.href} icon={item.icon} label={item.label} active={item.match(pathname)} />
+                </div>
+              ))}
+
+              <div className="flex-1 min-h-[20px]" />
+
+              <div className="px-1 mb-2">
+                <button
+                  onClick={handleCopyPublicLink}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 font-bold transition-all duration-150 bg-white/10 hover:bg-white/15 text-white shadow-sm"
+                  style={{ fontSize: 12.5 }}
+                >
+                  {copied ? <Check size={14} className="text-green-400" /> : <LinkIcon size={14} />}
+                  {copied ? "Link Copied!" : "Share Public Link"}
+                </button>
+              </div>
+
+              <div className="pt-2 border-t border-white/10 mt-2">
+                <button
+                  onClick={handleLogout}
+                  disabled={isPending}
+                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 font-semibold transition-all duration-150 text-white/50 hover:bg-red-500/15 hover:text-red-400 disabled:opacity-50"
+                  style={{ fontSize: 12.5 }}
+                >
+                  <LogOut size={14} />
+                  {isPending ? "Signing out…" : "Sign Out"}
+                </button>
+              </div>
+            </nav>
+          </aside>
+        </div>
+      )}
 
       {/* ── Mobile Bottom Nav ───────────────────────────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center h-14 bg-white/95 backdrop-blur-md border-t border-gray-100">
