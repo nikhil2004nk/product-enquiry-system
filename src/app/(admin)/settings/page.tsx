@@ -5,14 +5,18 @@ import SettingsTabs from "./SettingsTabs";
 import { MessageSquare } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  const userId = session.id;
   const isSuper = session.role === "SUPERADMIN";
+
+  const cookieStore = await cookies();
+  const filterAdminId = cookieStore.get("admin_filter_id")?.value;
+  const userId = isSuper && filterAdminId ? filterAdminId : session.id;
 
   // Each user sees only their own templates
   const templates = await (prisma as any).messageTemplate.findMany({
