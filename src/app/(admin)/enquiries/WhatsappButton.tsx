@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MessageSquare, Send } from "lucide-react";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
+import { logInteraction } from "./actions";
 
 type Template = {
   id: string;
@@ -26,6 +27,9 @@ export default function WhatsappButton({
   const handleSend = async () => {
     setLoading(true);
     try {
+      const templateName = templates.find(t => t.id === templateId)?.name || "Message";
+      await logInteraction(enquiryId, "WHATSAPP_SENT", `WhatsApp sent (Template: ${templateName})`);
+
       const res = await fetch(`/api/enquiries/${enquiryId}/whatsapp?templateId=${templateId}`);
       const data = await res.json();
       if (data.url) {

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { PlusCircle, Clock, ChevronRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { PlusCircle, Clock, ChevronRight, TrendingUp, TrendingDown, Minus, Bell, AlertTriangle } from "lucide-react";
 import { ShareLinkCard } from "./ShareLinkCard";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export default async function DashboardPage() {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const [todayEnquiriesCount, yesterdayEnquiriesCount, recentEnquiries] = await Promise.all([
+  const [todayEnquiriesCount, yesterdayEnquiriesCount, recentEnquiries, wonCount, lostCount, todaysFollowUps, overdueFollowUps] = await Promise.all([
     prisma.enquiry.count({ where: { createdAt: { gte: today } } }),
     prisma.enquiry.count({ where: { createdAt: { gte: yesterday, lt: today } } }),
     prisma.enquiry.findMany({
@@ -20,9 +20,30 @@ export default async function DashboardPage() {
       orderBy: { createdAt: "desc" },
       include: { customer: true, product: { include: { category: true } } },
     }),
+    prisma.interaction.count({ where: { outcome: "WON" } }),
+    prisma.interaction.count({ where: { outcome: "LOST" } }),
+    prisma.enquiry.findMany({
+      where: {
+        isReminderActive: true,
+        nextReminderDate: { gte: today, lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) }
+      },
+      include: { customer: true, product: true },
+      orderBy: { nextReminderDate: "asc" }
+    }),
+    prisma.enquiry.findMany({
+      where: {
+        isReminderActive: true,
+        nextReminderDate: { lt: today }
+      },
+      include: { customer: true, product: true },
+      orderBy: { nextReminderDate: "asc" }
+    })
   ]);
 
   const diff = todayEnquiriesCount - yesterdayEnquiriesCount;
+  
+  const totalResolved = wonCount + lostCount;
+  const winRate = totalResolved > 0 ? Math.round((wonCount / totalResolved) * 100) : 0;
 
   const timeGreeting = () => {
     const h = new Date().getHours();
@@ -40,32 +61,58 @@ export default async function DashboardPage() {
         <p className="text-sm text-gray-400 mt-0.5">Here's what's happening in your business today.</p>
       </div>
 
-      {/* ── Hero Stat Card ───────────────────────────────── */}
-      <div
-        className="mb-8 rounded-2xl p-6 text-white relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #6d28d9 100%)", boxShadow: "0 12px 40px rgba(79,70,229,0.35)" }}
-      >
-        {/* Decorative circles */}
-        <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10" />
-        <div className="absolute -right-4 top-16 w-24 h-24 rounded-full bg-white/5" />
+      {/* ── Hero Stat Cards ───────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        
+        {/* Enquiries Card */}
+        <div
+          className="rounded-2xl p-6 text-white relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #6d28d9 100%)", boxShadow: "0 12px 40px rgba(79,70,229,0.35)" }}
+        >
+          <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10" />
+          <div className="absolute -right-4 top-16 w-24 h-24 rounded-full bg-white/5" />
 
-        <div className="relative">
-          <p className="text-sm font-bold text-white/80 uppercase tracking-widest mb-1">Today's Enquiries</p>
-          <p className="text-7xl font-black mt-1 mb-3 tracking-tight text-white drop-shadow-md">
-            {todayEnquiriesCount}
-          </p>
-          <div className="flex items-center gap-1.5 font-medium">
-            {diff > 0
-              ? <TrendingUp size={16} className="text-green-300" />
-              : diff < 0
-              ? <TrendingDown size={16} className="text-red-300" />
-              : <Minus size={16} className="text-white/60" />
-            }
-            <p className="text-sm text-white/90">
-              {diff > 0 ? `+${diff}` : diff} from yesterday
+          <div className="relative">
+            <p className="text-sm font-bold text-white/80 uppercase tracking-widest mb-1">Today's Enquiries</p>
+            <p className="text-7xl font-black mt-1 mb-3 tracking-tight text-white drop-shadow-md">
+              {todayEnquiriesCount}
             </p>
+            <div className="flex items-center gap-1.5 font-medium">
+              {diff > 0
+                ? <TrendingUp size={16} className="text-green-300" />
+                : diff < 0
+                ? <TrendingDown size={16} className="text-red-300" />
+                : <Minus size={16} className="text-white/60" />
+              }
+              <p className="text-sm text-white/90">
+                {diff > 0 ? `+${diff}` : diff} from yesterday
+              </p>
+            </div>
           </div>
         </div>
+
+        {/* Win Rate Card */}
+        <div
+          className="rounded-2xl p-6 text-white relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #059669 0%, #10b981 100%)", boxShadow: "0 12px 40px rgba(16,185,129,0.25)" }}
+        >
+          <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10" />
+          <div className="absolute -right-4 top-16 w-24 h-24 rounded-full bg-white/5" />
+
+          <div className="relative">
+            <p className="text-sm font-bold text-white/80 uppercase tracking-widest mb-1">Conversion Rate</p>
+            <p className="text-7xl font-black mt-1 mb-3 tracking-tight text-white drop-shadow-md">
+              {winRate}%
+            </p>
+            <div className="flex items-center gap-1.5 font-medium">
+              <TrendingUp size={16} className="text-emerald-100" />
+              <p className="text-sm text-white/90">
+                {wonCount} won / {totalResolved} resolved
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* ── Quick Actions ─────────────────────────────────── */}
@@ -95,6 +142,44 @@ export default async function DashboardPage() {
 
         <ShareLinkCard />
       </div>
+
+      {/* ── Priority Follow-ups ───────────────────────────── */}
+      {(todaysFollowUps.length > 0 || overdueFollowUps.length > 0) && (
+        <>
+          <div className="flex items-center gap-2 mb-3">
+            <Bell size={18} className="text-indigo-600" />
+            <p className="section-label !mb-0">Priority Follow-ups</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {overdueFollowUps.map((enq: any) => (
+              <Link key={enq.id} href={`/customers/${enq.customerId}`} className="card p-4 border-l-4 border-l-red-500 hover:border-l-red-600 group">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{enq.customer.name}</h4>
+                    <p className="text-xs text-gray-500 mt-1">{enq.nextReminderNote}</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded text-[10px] font-bold">
+                    <AlertTriangle size={12} /> Overdue
+                  </div>
+                </div>
+              </Link>
+            ))}
+            {todaysFollowUps.map((enq: any) => (
+              <Link key={enq.id} href={`/customers/${enq.customerId}`} className="card p-4 border-l-4 border-l-indigo-500 hover:border-l-indigo-600 group">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{enq.customer.name}</h4>
+                    <p className="text-xs text-gray-500 mt-1">{enq.nextReminderNote}</p>
+                  </div>
+                  <div className="text-indigo-600 bg-indigo-50 px-2 py-1 rounded text-[10px] font-bold">
+                    Today
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* ── Recent Enquiries ─────────────────────────────── */}
       <div className="flex items-center justify-between mb-3">

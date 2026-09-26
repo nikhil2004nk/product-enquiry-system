@@ -7,6 +7,7 @@ import ProductFilter from "./ProductFilter";
 import SourceFilter from "./SourceFilter";
 import MonthFilter from "./MonthFilter";
 import DeleteEnquiryButton from "./DeleteEnquiryButton";
+import ReminderButton from "./ReminderButton";
 import { ArrowLeft, MessageSquare, Inbox } from "lucide-react";
 import { Suspense } from "react";
 
@@ -213,7 +214,8 @@ export default async function EnquiriesPage(props: {
 
                     {/* Actions */}
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end">
+                      <div className="flex items-center justify-end gap-2">
+                        <ReminderButton enquiryId={enq.id} isActive={enq.isReminderActive} />
                         <WhatsappButton 
                           enquiryId={enq.id} 
                           mobile={enq.customer.mobile} 
@@ -255,14 +257,17 @@ export default async function EnquiriesPage(props: {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between border-t border-gray-50 pt-2">
+              <div className="flex items-center justify-between border-t border-gray-50 pt-2 mt-1">
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{enq.product.modelNumber}</p>
                   <p className="text-xs text-gray-400">{enq.product.category.name}</p>
                 </div>
-                <p className="text-xs text-gray-400 text-right">
-                  {new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short" }).format(new Date(enq.createdAt))}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-gray-400 text-right pr-2">
+                    {new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short" }).format(new Date(enq.createdAt))}
+                  </p>
+                  <ReminderButton enquiryId={enq.id} isActive={enq.isReminderActive} />
+                </div>
               </div>
 
               <div className="border-t border-gray-50 pt-2 flex items-center justify-end">

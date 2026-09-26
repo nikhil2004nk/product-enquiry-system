@@ -55,7 +55,7 @@ export function CustomDropdown({
       position: "fixed",
       left: rect.left,
       width: rect.width,
-      zIndex: 9999,
+      zIndex: 9999999, // Ensure it's above ResolveModal (999999)
       ...(goUp
         ? { bottom: window.innerHeight - rect.top + 4 }
         : { top: rect.bottom + 4 }),
@@ -114,7 +114,7 @@ export function CustomDropdown({
     <div
       id="dropdown-portal-panel"
       style={{ ...panelStyle, maxHeight: "300px" }}
-      className="bg-white rounded-xl border border-gray-200 shadow-2xl overflow-hidden animate-dropdown flex flex-col z-[99999]"
+      className="bg-white rounded-xl border border-gray-200 shadow-2xl overflow-hidden animate-dropdown flex flex-col z-[9999999]"
     >
       {/* Search */}
       {searchable && (

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package } from "lucide-react";
+import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell } from "lucide-react";
 import { logoutAdmin } from "@/app/login/actions";
 import { useTransition, useState } from "react";
 
@@ -26,6 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { href: "/dashboard", icon: <Home size={15} />, label: "Dashboard", match: (p: string) => p === "/dashboard" },
+    { href: "/notifications", icon: <Bell size={15} />, label: "Notifications", match: (p: string) => p.startsWith("/notifications") },
     { href: "/admin-enquiry", icon: <PlusCircle size={15} />, label: "New Enquiry", match: (p: string) => p === "/admin-enquiry" },
     { href: "/enquiries", icon: <Clock size={15} />, label: "History", match: (p: string) => p.startsWith("/enquiries") },
   ];
@@ -120,6 +121,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               {copied ? <Check size={16} className="text-green-500" /> : <LinkIcon size={16} />}
             </button>
+            <Link href="/notifications" className="w-8 h-8 flex items-center justify-center rounded-lg text-indigo-500 hover:bg-indigo-50 transition-colors" title="Notifications">
+              <Bell size={16} />
+            </Link>
             <Link href="/admin/products" className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors" title="Catalog">
               <Package size={16} />
             </Link>

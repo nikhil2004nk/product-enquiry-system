@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Phone, MessageCircle, Calendar, Tag } from "lucide-react";
+import InteractionTimeline from "./InteractionTimeline";
 
 export default async function CustomerHistoryPage({
   params,
@@ -14,7 +15,12 @@ export default async function CustomerHistoryPage({
     where: { id: resolvedParams.id },
     include: {
       enquiries: {
-        include: { product: true },
+        include: { 
+          product: true,
+          interactions: {
+            orderBy: { createdAt: "asc" }
+          }
+        },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -100,7 +106,7 @@ export default async function CustomerHistoryPage({
                 const statusCls = statusConfig[enq.status] ?? "badge";
 
                 return (
-                  <div key={enq.id} className="card p-5">
+                  <div key={enq.id} className="card p-5 mb-4">
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-2">
                         <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500 text-xs font-bold shrink-0">
@@ -122,6 +128,13 @@ export default async function CustomerHistoryPage({
                         <p className="text-sm text-gray-500 italic">"{enq.notes}"</p>
                       </div>
                     )}
+
+                    <InteractionTimeline 
+                      enquiryId={enq.id} 
+                      interactions={enq.interactions} 
+                      isActiveReminder={enq.isReminderActive}
+                      nextReminderDate={enq.nextReminderDate}
+                    />
                   </div>
                 );
               })}
