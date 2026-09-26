@@ -5,7 +5,7 @@ import { verifyJwt } from "@/lib/jwt";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customerName, mobile, productId, notes, templateId } = body;
+    const { customerName, mobile, productId, notes, templateId, adminId: publicAdminId } = body;
 
     // 1. Verify Authentication for "ADMIN" source
     const sessionCookie = request.cookies.get("admin_session");
@@ -50,11 +50,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If it's a public request, assign the customer to the Super Admin by default
+    // If it's a public request, assign based on the link used:
+    // - /enquiry/{adminId} → assign directly to that admin
+    // - /enquiry           → leave userId null (goes to Unassigned queue in Super Admin dashboard)
     if (!adminUserId) {
-      const superAdmin = await prisma.user.findFirst({ where: { role: "SUPERADMIN" } }) || await prisma.user.findFirst();
-      if (!superAdmin) return NextResponse.json({ error: "System not configured properly. No Admins found." }, { status: 500 });
-      adminUserId = superAdmin.id;
+      if (publicAdminId) {
+        adminUserId = publicAdminId;
+      }
+      // else leave adminUserId as null — handled below when creating enquiry
     }
 
     // 4. Find or create customer
@@ -64,8 +67,8 @@ export async function POST(request: NextRequest) {
       create: {
         name: customerName,
         mobile,
-        userId: adminUserId,
-      },
+        userId: adminUserId || undefined,
+      } as any,
     });
 
     // 5. Create enquiry

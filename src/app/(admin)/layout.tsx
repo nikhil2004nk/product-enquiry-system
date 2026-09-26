@@ -9,5 +9,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const filterAdminId = cookieStore.get("admin_filter_id")?.value;
   const isViewingAsAdmin = !!filterAdminId;
   
-  return <AdminLayoutClient role={role} isViewingAsAdmin={isViewingAsAdmin}>{children}</AdminLayoutClient>;
+  // Super admin sees /enquiry (all). Viewing as admin → /enquiry/{adminId}. Regular admin → /enquiry/{ownId}.
+  const publicLinkId = role === "SUPERADMIN"
+    ? (filterAdminId || "")  // empty = no suffix (all-admin page)
+    : (session?.id || "");   // regular admin always sees their own link
+
+  return <AdminLayoutClient role={role} isViewingAsAdmin={isViewingAsAdmin} publicLinkId={publicLinkId}>{children}</AdminLayoutClient>;
 }

@@ -10,11 +10,13 @@ import { GlobalAdminSwitcher } from "./GlobalAdminSwitcher";
 export default function AdminLayoutClient({ 
   children, 
   role, 
-  isViewingAsAdmin = false 
+  isViewingAsAdmin = false,
+  publicLinkId = "",
 }: { 
   children: React.ReactNode;
   role: string | null;
   isViewingAsAdmin?: boolean;
+  publicLinkId?: string;
 }) {
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
@@ -22,7 +24,9 @@ export default function AdminLayoutClient({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleCopyPublicLink = () => {
-    const url = `${window.location.origin}/enquiry`;
+    const url = publicLinkId
+      ? `${window.location.origin}/enquiry/${publicLinkId}`
+      : `${window.location.origin}/enquiry`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
