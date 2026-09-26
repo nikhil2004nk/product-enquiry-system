@@ -50,11 +50,19 @@ export function CustomDropdown({
     const spaceAbove = rect.top - 8;
     const goUp = spaceBelow < panelH && spaceAbove > spaceBelow;
 
+    const minW = Math.max(rect.width, 180);
+    let leftPos = rect.left;
+    
+    // Prevent rendering off-screen to the right
+    if (rect.left + minW > window.innerWidth - 16) {
+      leftPos = rect.right - minW;
+    }
+
     setDropUp(goUp);
     setPanelStyle({
       position: "fixed",
-      left: rect.left,
-      width: rect.width,
+      left: leftPos,
+      width: minW,
       zIndex: 9999999, // Ensure it's above ResolveModal (999999)
       ...(goUp
         ? { bottom: window.innerHeight - rect.top + 4 }
@@ -114,7 +122,7 @@ export function CustomDropdown({
     <div
       id="dropdown-portal-panel"
       style={{ ...panelStyle, maxHeight: "300px" }}
-      className="bg-white rounded-xl border border-gray-200 shadow-2xl overflow-hidden animate-dropdown flex flex-col z-[9999999]"
+      className="bg-white rounded-xl border border-gray-200 shadow-2xl overflow-hidden animate-dropdown flex flex-col z-[9999999] text-left"
     >
       {/* Search */}
       {searchable && (

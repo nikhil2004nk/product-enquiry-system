@@ -10,6 +10,7 @@ import DeleteEnquiryButton from "./DeleteEnquiryButton";
 import ReminderButton from "./ReminderButton";
 import { ArrowLeft, MessageSquare, Inbox } from "lucide-react";
 import { Suspense } from "react";
+import { AssignDropdown } from "../superadmin/dashboard/AssignDropdown";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,11 @@ export default async function EnquiriesPage(props: {
     }
   }
 
+  const admins = isSuper ? await prisma.user.findMany({
+    where: { role: "ADMIN" },
+    select: { id: true, name: true }
+  }) : [];
+
   const enquiries = await prisma.enquiry.findMany({
     where: {
       ...(isSuper ? (filterAdminId ? { userId: filterAdminId } : {}) : { userId }),
@@ -66,7 +72,7 @@ export default async function EnquiriesPage(props: {
           }
         : {}),
     },
-    include: { customer: true, product: { include: { category: true } } },
+    include: { customer: true, product: { include: { category: true } }, user: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -168,6 +174,7 @@ export default async function EnquiriesPage(props: {
                 <th className="px-6 py-4">Customer</th>
                 <th className="px-6 py-4">Offering Interest</th>
                 <th className="px-6 py-4">Status</th>
+                {isSuper && <th className="px-6 py-4">Assigned To</th>}
                 <th className="px-6 py-4">Date</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -218,6 +225,13 @@ export default async function EnquiriesPage(props: {
                         <StatusDropdown enquiryId={enq.id} currentStatus={enq.status} />
                       </div>
                     </td>
+
+                    {/* Assigned To */}
+                    {isSuper && (
+                      <td className="px-6 py-4">
+                        <AssignDropdown enquiryId={enq.id} admins={admins} initialValue={enq.userId || ""} />
+                      </td>
+                    )}
 
                     {/* Date */}
                     <td className="px-6 py-4">
@@ -270,6 +284,12 @@ export default async function EnquiriesPage(props: {
                   <StatusDropdown enquiryId={enq.id} currentStatus={enq.status} />
                 </div>
               </div>
+
+              {isSuper && (
+                <div className="mt-1">
+                  <AssignDropdown enquiryId={enq.id} admins={admins} initialValue={enq.userId || ""} />
+                </div>
+              )}
 
               <div className="flex items-center justify-between border-t border-gray-50 pt-2 mt-1">
                 <div>

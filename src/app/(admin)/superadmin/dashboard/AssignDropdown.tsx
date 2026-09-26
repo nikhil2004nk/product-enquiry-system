@@ -2,41 +2,39 @@
 
 import { useState } from "react";
 import { assignEnquiry } from "../actions";
+import { CustomDropdown } from "@/components/ui/CustomDropdown";
 
 export function AssignDropdown({
   enquiryId,
-  admins
+  admins,
+  initialValue = ""
 }: {
   enquiryId: string;
   admins: { id: string; name: string }[];
+  initialValue?: string;
 }) {
   const [loading, setLoading] = useState(false);
+  const [assigned, setAssigned] = useState(initialValue);
 
-  async function handleAssign(e: React.ChangeEvent<HTMLSelectElement>) {
-    const adminId = e.target.value;
+  async function handleAssign(adminId: string) {
     if (!adminId) return;
 
     setLoading(true);
     await assignEnquiry(enquiryId, adminId);
+    setAssigned(adminId);
     setLoading(false);
   }
 
   return (
-    <div className="relative">
-      <select
-        className="input !py-1 !text-xs !bg-gray-50 border-gray-200 focus:border-indigo-500 font-semibold cursor-pointer w-32"
+    <div className="relative w-36 text-left">
+      <CustomDropdown
+        value={assigned}
+        size="sm"
         onChange={handleAssign}
-        disabled={loading}
-        defaultValue=""
-      >
-        <option value="" disabled>Assign to...</option>
-        {admins.map((a) => (
-          <option key={a.id} value={a.id}>
-            {a.name}
-          </option>
-        ))}
-      </select>
-      {loading && <div className="absolute right-2 top-2 w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />}
+        options={admins.map(a => ({ value: a.id, label: a.name }))}
+        placeholder="Assign to..."
+      />
+      {loading && <div className="absolute right-9 top-3 w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin pointer-events-none" />}
     </div>
   );
 }

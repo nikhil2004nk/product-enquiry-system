@@ -86,40 +86,68 @@ export default async function SuperAdminDashboard() {
             <p className="text-sm text-gray-500 mt-1">There are no unassigned enquiries right now.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-gray-50/50 text-gray-500 font-bold text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="px-4 py-3 rounded-l-xl">Customer</th>
-                  <th className="px-4 py-3">Product</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3 text-right rounded-r-xl">Assign To</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {unassignedEnquiries.map((enq) => (
-                  <tr key={enq.id} className="hover:bg-gray-50/30 transition-colors">
-                    <td className="px-4 py-4">
-                      <div className="font-bold text-gray-900">{enq.customer.name}</div>
-                      <div className="text-xs text-gray-500">{enq.customer.mobile}</div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-semibold text-gray-800">{enq.product.modelNumber}</div>
-                      <div className="text-xs text-gray-400">{enq.product.category.name}</div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="text-xs text-gray-500">
-                        {new Intl.DateTimeFormat("en-IN", { timeZone: 'Asia/Kolkata', day: "numeric", month: "short", hour: "numeric", minute: "numeric" }).format(enq.createdAt)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 flex justify-end">
-                      <AssignDropdown enquiryId={enq.id} admins={admins} />
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-gray-50/50 text-gray-500 font-bold text-xs uppercase tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3 rounded-l-xl">Customer</th>
+                    <th className="px-4 py-3">Product</th>
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3 text-right rounded-r-xl">Assign To</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {unassignedEnquiries.map((enq) => (
+                    <tr key={enq.id} className="hover:bg-gray-50/30 transition-colors">
+                      <td className="px-4 py-4">
+                        <div className="font-bold text-gray-900">{enq.customer.name}</div>
+                        <div className="text-xs text-gray-500">{enq.customer.mobile}</div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="font-semibold text-gray-800">{enq.product.modelNumber}</div>
+                        <div className="text-xs text-gray-400">{enq.product.category.name}</div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-xs text-gray-500">
+                          {new Intl.DateTimeFormat("en-IN", { timeZone: 'Asia/Kolkata', day: "numeric", month: "short", hour: "numeric", minute: "numeric" }).format(enq.createdAt)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 flex justify-end">
+                        <AssignDropdown enquiryId={enq.id} admins={admins} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4 mt-2">
+              {unassignedEnquiries.map((enq) => (
+                <div key={enq.id} className="border border-gray-100 rounded-2xl p-4 bg-white shadow-sm flex flex-col gap-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-bold text-gray-900 text-sm">{enq.customer.name}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">{enq.customer.mobile}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-gray-800 text-sm">{enq.product.modelNumber}</div>
+                      <div className="text-[10px] uppercase font-bold text-gray-400 mt-0.5">{enq.product.category.name}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between border-t border-gray-50 pt-3 mt-1">
+                    <span className="text-xs text-gray-400">
+                      {new Intl.DateTimeFormat("en-IN", { timeZone: 'Asia/Kolkata', day: "numeric", month: "short" }).format(enq.createdAt)}
+                    </span>
+                    <AssignDropdown enquiryId={enq.id} admins={admins} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
