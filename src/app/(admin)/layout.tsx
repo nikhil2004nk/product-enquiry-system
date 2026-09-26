@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell, ShieldCheck } from "lucide-react";
 import { logoutAdmin } from "@/app/login/actions";
-import { useTransition, useState } from "react";
+import { useTransition, useState, useEffect } from "react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -24,6 +24,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
   };
 
+  const [role, setRole] = useState<string | null>(null);
+  
+  // We fetch the session dynamically on the client
+  // so we can conditionally render the Super Admin link
+  useEffect(() => {
+    async function fetchRole() {
+      try {
+        const res = await fetch("/api/auth/session"); // We'll create this route
+        if (res.ok) {
+          const data = await res.json();
+          setRole(data.role);
+        }
+      } catch (e) {}
+    }
+    fetchRole();
+  }, []);
+
   const navItems = [
     { href: "/dashboard", icon: <Home size={15} />, label: "Dashboard", match: (p: string) => p === "/dashboard" },
     { href: "/notifications", icon: <Bell size={15} />, label: "Notifications", match: (p: string) => p.startsWith("/notifications") },
@@ -32,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   const adminItems = [
-    { href: "/superadmin/dashboard", icon: <ShieldCheck size={15} />, label: "Super Admin", match: (p: string) => p.startsWith("/superadmin") },
+    ...(role === "SUPERADMIN" ? [{ href: "/superadmin/dashboard", icon: <ShieldCheck size={15} />, label: "Super Admin", match: (p: string) => p.startsWith("/superadmin") }] : []),
     { href: "/admin/products", icon: <Package size={15} />, label: "Manage Catalog", match: (p: string) => p.startsWith("/admin/products") },
     { href: "/users", icon: <Users size={15} />, label: "User Access", match: (p: string) => p.startsWith("/users") },
     { href: "/settings", icon: <Settings size={15} />, label: "Settings", match: (p: string) => p.startsWith("/settings") },

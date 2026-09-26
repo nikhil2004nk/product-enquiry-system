@@ -36,10 +36,10 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
-    // Redirect SUPERADMINs away from regular admin areas to their specific portal
-    // (Optional, but keeps things clean)
-    if ((path.startsWith('/dashboard') || path === '/') && role === 'SUPERADMIN') {
-      return NextResponse.redirect(new URL('/superadmin/dashboard', request.url));
+    // Redirect root to dashboard (SUPERADMIN can access both)
+    if (path === '/') {
+      if (role === 'SUPERADMIN') return NextResponse.redirect(new URL('/superadmin/dashboard', request.url));
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
     return NextResponse.next();

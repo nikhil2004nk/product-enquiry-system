@@ -8,6 +8,7 @@ export async function registerUser(formData: FormData) {
   const name = formData.get("name")?.toString().trim();
   const mobile = formData.get("mobile")?.toString().trim();
   const pin = formData.get("pin")?.toString().trim();
+  const role = formData.get("role")?.toString() || "ADMIN";
 
   if (!name || !mobile || !pin) {
     return { error: "All fields are required" };
@@ -37,6 +38,7 @@ export async function registerUser(formData: FormData) {
         name,
         mobile,
         pinHash,
+        role,
       },
     });
     
@@ -64,5 +66,49 @@ export async function deleteUser(id: string) {
   } catch (error) {
     console.error("Failed to delete user:", error);
     return { error: "Deletion failed" };
+  }
+}
+
+export async function editUser(formData: FormData) {
+  const id = formData.get("id")?.toString();
+  const name = formData.get("name")?.toString().trim();
+  const mobile = formData.get("mobile")?.toString().trim();
+  const pin = formData.get("pin")?.toString().trim();
+  const role = formData.get("role")?.toString() || "ADMIN";
+
+  if (!id || !name || !mobile) {
+    return { error: "Name and mobile are required" };
+  }
+
+  if (!/^[6-9]\d{9}$/.test(mobile)) {
+    return { error: "Invalid mobile number" };
+  }
+
+  try {
+    const existingUser = await (prisma as any).user.findUnique({
+      where: { mobile },
+    });
+
+    if (existingUser && existingUser.id !== id) {
+      return { error: "Mobile number already used by another user" };
+    }
+
+    const dataToUpdate: any = { name, mobile, role };
+    if (pin && pin.length >= 4) {
+      dataToUpdate.pinHash = await bcrypt.hash(pin, 10);
+    } else if (pin && pin.length > 0) {
+      return { error: "PIN must be at least 4 digits" };
+    }
+
+    await (prisma as any).user.update({
+      where: { id },
+      data: dataToUpdate,
+    });
+    
+    revalidatePath("/users");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to edit user:", error);
+    return { error: "Edit failed" };
   }
 }
