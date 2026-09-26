@@ -118,3 +118,47 @@ export async function deleteProduct(id: string) {
     return { error: "Cannot delete product that has existing enquiries." };
   }
 }
+
+export async function bulkImportProducts(products: {
+  categoryName: string;
+  modelNumber: string;
+  productName: string | null;
+  pdfUrl: string | null;
+  active: boolean;
+}[]) {
+  try {
+    let count = 0;
+    for (const p of products) {
+      if (!p.modelNumber) continue;
+
+      // Ensure category exists
+      let category = await prisma.category.findUnique({ where: { name: p.categoryName } });
+      if (!category) {
+        category = await prisma.category.create({ data: { name: p.categoryName } });
+      }
+
+      // Upsert product
+      await prisma.product.upsert({
+        where: { categoryId_modelNumber: { categoryId: category.id, modelNumber: p.modelNumber } },
+        update: {
+          productName: p.productName,
+          pdfUrl: p.pdfUrl,
+          active: p.active,
+        },
+        create: {
+          categoryId: category.id,
+          modelNumber: p.modelNumber,
+          productName: p.productName,
+          pdfUrl: p.pdfUrl,
+          active: p.active,
+        },
+      });
+      count++;
+    }
+    revalidatePath("/admin/products");
+    return { success: true, count };
+  } catch (error) {
+    console.error("Bulk import error:", error);
+    return { error: "Failed to process bulk import" };
+  }
+}

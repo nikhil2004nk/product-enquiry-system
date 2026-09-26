@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { createCategory, editCategory, deleteCategory, createProduct, editProduct, deleteProduct, toggleProductStatus } from "./actions";
-import { PlusCircle, Tag, Package, Edit2, Trash2, X, Check, Eye } from "lucide-react";
+import { useState, useTransition, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { createCategory, editCategory, deleteCategory, createProduct, editProduct, deleteProduct, toggleProductStatus, bulkImportProducts } from "./actions";
+import { PlusCircle, Tag, Package, Edit2, Trash2, X, Check, Eye, Download, Upload } from "lucide-react";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
+import * as XLSX from "xlsx";
 
 type Product = {
   id: string;
@@ -37,9 +39,15 @@ export default function ProductManager({ categories }: { categories: Category[] 
   const [productPdf, setProductPdf] = useState("");
   const [productCategoryId, setProductCategoryId] = useState("");
 
-  // Create forms visibility
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Handlers for Category
   const handleSaveCategory = async (e: React.FormEvent) => {
@@ -110,6 +118,110 @@ export default function ProductManager({ categories }: { categories: Category[] 
     }
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    const data = categories.flatMap(c => 
+      c.products.map(p => ({
+        Category: c.name,
+        "Model Number": p.modelNumber,
+        "Product Name": p.productName || "",
+        "PDF URL": p.pdfUrl || "",
+        Status: p.active ? "Active" : "Inactive"
+      }))
+    );
+    
+    if (data.length === 0) {
+      alert("No products to export.");
+      return;
+    }
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+    XLSX.writeFile(wb, "products_catalog.xlsx");
+  };
+
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      {
+        Category: "OLED TV",
+        "Model Number": "OLED65C3",
+        "Product Name": "65 inch C3 Series",
+        "PDF URL": "https://example.com/spec.pdf",
+        Status: "Active"
+      },
+      {
+        Category: "OLED TV",
+        "Model Number": "OLED55C3",
+        "Product Name": "",
+        "PDF URL": "",
+        Status: "Inactive"
+      }
+    ];
+    
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    
+    // Set column widths for better readability
+    ws['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 30 }, { wch: 40 }, { wch: 10 }];
+
+    XLSX.writeFile(wb, "products_template.xlsx");
+  };
+
+  const processExcelFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+        
+        const parsedData = data.map((row: any) => ({
+          categoryName: row["Category"]?.toString().trim() || "Uncategorized",
+          modelNumber: row["Model Number"]?.toString().trim(),
+          productName: row["Product Name"]?.toString().trim() || null,
+          pdfUrl: row["PDF URL"]?.toString().trim() || null,
+          active: row["Status"] !== "Inactive"
+        })).filter((item: any) => item.modelNumber);
+
+        if (parsedData.length === 0) {
+          alert("No valid products found in Excel file.");
+          return;
+        }
+
+        startTransition(async () => {
+          const res = await bulkImportProducts(parsedData);
+          if (res.error) alert(res.error);
+          else {
+            alert(`Successfully imported ${res.count} products!`);
+            setShowImportModal(false);
+          }
+          if (fileInputRef.current) fileInputRef.current.value = "";
+        });
+      } catch (err) {
+        alert("Error parsing Excel file. Ensure it matches the export format.");
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processExcelFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processExcelFile(file);
+  };
+
+
   return (
     <div className="space-y-6">
       {/* Tabs */}
@@ -135,13 +247,21 @@ export default function ProductManager({ categories }: { categories: Category[] 
       {/* ── PRODUCTS TAB ────────────────────────────────────────── */}
       {tab === "products" && (
         <div className="space-y-6 animate-fade-in">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center flex-wrap gap-2">
             <h2 className="text-lg font-bold text-gray-900">Products ({categories.reduce((acc, c) => acc + c.products.length, 0)})</h2>
-            {!showAddProduct && (
-              <button onClick={() => { setShowAddProduct(true); setEditingProduct(null); setProductCategoryId(categories[0]?.id || ""); }} className="btn btn-primary btn-sm">
-                <PlusCircle size={16} /> Add Product
+            <div className="flex items-center gap-2">
+              <button onClick={handleExport} className="btn bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 btn-sm font-semibold flex gap-1.5 items-center">
+                <Download size={14} /> Export
               </button>
-            )}
+              <button onClick={() => setShowImportModal(true)} className="btn bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 btn-sm font-semibold flex gap-1.5 items-center">
+                <Upload size={14} /> Import
+              </button>
+              {!showAddProduct && (
+                <button onClick={() => { setShowAddProduct(true); setEditingProduct(null); setProductCategoryId(categories[0]?.id || ""); }} className="btn btn-primary btn-sm ml-2">
+                  <PlusCircle size={16} /> Add Product
+                </button>
+              )}
+            </div>
           </div>
 
           {(showAddProduct || editingProduct) && (
@@ -330,6 +450,44 @@ export default function ProductManager({ categories }: { categories: Category[] 
             )}
           </div>
         </div>
+      )}
+
+      {/* Import Modal */}
+      {showImportModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-fade-in" style={{ position: "fixed" }}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[95vh] flex flex-col relative">
+            <button onClick={() => setShowImportModal(false)} className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors z-10">
+              <X size={18} />
+            </button>
+            <div className="p-6 overflow-y-auto flex-1">
+              <h2 className="text-xl font-bold text-gray-900 mb-2 pr-6">Import Products</h2>
+              <p className="text-sm text-gray-500 mb-5">Upload an Excel file (.xlsx) to bulk create or update your products.</p>
+              
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-colors ${isDragging ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-indigo-400 hover:bg-gray-50"}`}
+              >
+                <Upload size={28} className={`mb-2 ${isDragging ? "text-indigo-600" : "text-gray-400"}`} />
+                <p className="text-sm font-medium text-gray-700 mb-1">Drag and drop your Excel file here</p>
+                <p className="text-xs text-gray-400 mb-3">or click to browse from your computer</p>
+                <label className="btn bg-indigo-600 hover:bg-indigo-700 text-white btn-sm cursor-pointer shadow-sm relative overflow-hidden">
+                  Browse Files
+                  <input type="file" accept=".xlsx,.xls" className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" ref={fileInputRef} onChange={handleImport} />
+                </label>
+              </div>
+
+              <div className="mt-5 flex flex-col items-center border-t border-gray-100 pt-5">
+                <p className="text-sm text-gray-600 mb-2">Need a template to get started?</p>
+                <button onClick={handleDownloadTemplate} className="btn bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 btn-sm shadow-sm flex items-center gap-2">
+                  <Download size={16} className="text-gray-400" /> Download Excel Template
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
     </div>
