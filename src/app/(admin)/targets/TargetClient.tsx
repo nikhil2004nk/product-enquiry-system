@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { getMonthlyTarget, updateTargetAmount, addTargetEntry, editTargetEntry, deleteTargetEntry } from "./actions";
-import { Target, TrendingUp, TrendingDown, Minus, Calendar, Loader2, CheckCircle2, ListPlus, Pencil, Trash2, X, Check, Settings2, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getMonthlyTarget, updateTargetAmount, addTargetEntry, editTargetEntry, deleteTargetEntry, getTeamTargets } from "./actions";
+import { Target, TrendingUp, TrendingDown, Minus, Calendar, Loader2, CheckCircle2, ListPlus, Pencil, Trash2, X, Check, Settings2, Plus, Users } from "lucide-react";
 import { CustomDateTimePicker } from "@/components/ui/CustomDateTimePicker";
 import { CustomMonthPicker } from "@/components/ui/CustomMonthPicker";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 
-export default function TargetClient({ initialMonth, initialTarget, historicalTargets = [] }: { initialMonth: string, initialTarget: any, historicalTargets?: any[] }) {
+export default function TargetClient({ initialMonth, initialTarget, historicalTargets = [], isSuperAdmin = false }: { initialMonth: string, initialTarget: any, historicalTargets?: any[], isSuperAdmin?: boolean }) {
   const [month, setMonth] = useState(initialMonth);
   const [target, setTarget] = useState(initialTarget);
   const [loading, setLoading] = useState(false);
   const [isUpdatingTarget, setIsUpdatingTarget] = useState(false);
   
   const [targetInput, setTargetInput] = useState(initialTarget?.targetAmount?.toString() || "");
-  const [activeTab, setActiveTab] = useState<'current' | 'history'>('current');
+  const [activeTab, setActiveTab] = useState<'current' | 'history' | 'team'>('current');
   const [chartRange, setChartRange] = useState<number>(6);
   
   // Toggles for forms
@@ -32,6 +32,20 @@ export default function TargetClient({ initialMonth, initialTarget, historicalTa
   const [editDateObj, setEditDateObj] = useState<Date | undefined>(undefined);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+
+  // Team Targets state
+  const [teamTargets, setTeamTargets] = useState<any[]>([]);
+  const [isLoadingTeam, setIsLoadingTeam] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'team' && isSuperAdmin) {
+      setIsLoadingTeam(true);
+      getTeamTargets(month).then(res => {
+        setTeamTargets(res || []);
+        setIsLoadingTeam(false);
+      });
+    }
+  }, [month, activeTab, isSuperAdmin]);
 
   const reloadTarget = async (m: string) => {
     const newTarget = await getMonthlyTarget(m);
@@ -140,6 +154,14 @@ export default function TargetClient({ initialMonth, initialTarget, historicalTa
         >
           History & Comparison
         </button>
+        {isSuperAdmin && (
+          <button 
+            onClick={() => setActiveTab('team')} 
+            className={`pb-3 font-bold text-sm border-b-2 transition-colors flex items-center gap-1 ${activeTab === 'team' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-900'}`}
+          >
+            <Users size={16} /> Team Performance
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -385,7 +407,7 @@ export default function TargetClient({ initialMonth, initialTarget, historicalTa
           </div>
 
         </div>
-      ) : (
+      ) : activeTab === 'history' ? (
         /* Historical Performance */
         <div className="animate-fade-up">
           {historicalTargets.length === 0 ? (
@@ -555,11 +577,11 @@ export default function TargetClient({ initialMonth, initialTarget, historicalTa
 
                     if (growthPct > 0) {
                       const displayPct = growthPct > 999 ? ">999" : growthPct.toFixed(1);
-                      growthBadge = <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-md"><TrendingUp size={10} /> +{displayPct}%</span>;
+                      growthBadge = <span title="Month-over-Month growth (compared to previous month)" className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-md cursor-help"><TrendingUp size={10} /> +{displayPct}% MoM</span>;
                     } else if (growthPct < 0) {
-                      growthBadge = <span className="flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded-md"><TrendingDown size={10} /> {growthPct.toFixed(1)}%</span>;
+                      growthBadge = <span title="Month-over-Month decline (compared to previous month)" className="flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded-md cursor-help"><TrendingDown size={10} /> {growthPct.toFixed(1)}% MoM</span>;
                     } else {
-                      growthBadge = <span className="flex items-center gap-1 text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md"><Minus size={10} /> 0%</span>;
+                      growthBadge = <span title="No change from previous month" className="flex items-center gap-1 text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md cursor-help"><Minus size={10} /> 0% MoM</span>;
                     }
                   }
 
@@ -583,6 +605,84 @@ export default function TargetClient({ initialMonth, initialTarget, historicalTa
               </div>
             </div>
           )}
+        </div>
+      ) : (
+        /* Team Performance Tab */
+        <div className="animate-fade-up">
+          <div className="card p-0 overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 text-xl">Team Performance for {month}</h3>
+              {isLoadingTeam && <Loader2 size={16} className="animate-spin text-gray-400" />}
+            </div>
+            
+            <div className="p-0 overflow-x-auto">
+              <table className="w-full text-left text-sm whitespace-nowrap min-w-[600px]">
+                <thead className="bg-gray-50/50 text-gray-500 font-bold text-xs uppercase tracking-wider border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-3">Team Member</th>
+                    <th className="px-6 py-3">Target</th>
+                    <th className="px-6 py-3">Achieved</th>
+                    <th className="px-6 py-3">Completion</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {teamTargets.length === 0 && !isLoadingTeam ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center text-gray-400 font-semibold">
+                        No team data found for this month.
+                      </td>
+                    </tr>
+                  ) : (
+                    teamTargets.map((user) => {
+                      const hPct = user.targetAmount > 0 ? Math.min(100, Math.round((user.achievedAmount / user.targetAmount) * 100)) : 0;
+                      let hBar = "bg-red-500";
+                      let hText = "text-red-600";
+                      if (hPct >= 100) { hBar = "bg-emerald-500"; hText = "text-emerald-600"; }
+                      else if (hPct >= 75) { hBar = "bg-green-500"; hText = "text-green-600"; }
+                      else if (hPct >= 40) { hBar = "bg-amber-500"; hText = "text-amber-600"; }
+
+                      return (
+                        <tr key={user.userId} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-6 py-4 font-bold text-gray-900">
+                            {user.userName}
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-gray-600">
+                            ₹{user.targetAmount.toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4 font-bold text-gray-900">
+                            <div className="flex items-center gap-2">
+                              <span>₹{user.achievedAmount.toLocaleString()}</span>
+                              {(user.growthPct || 0) !== 0 ? (
+                                <span 
+                                  title={(user.growthPct || 0) > 0 ? "Month-over-Month growth" : "Month-over-Month decline"} 
+                                  className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-md cursor-help ${(user.growthPct || 0) > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}
+                                >
+                                  {(user.growthPct || 0) > 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                                  {(user.growthPct || 0) > 0 ? '+' : ''}{(user.growthPct || 0) > 999 ? '>999' : (user.growthPct || 0).toFixed(1)}% MoM
+                                </span>
+                              ) : user.achievedAmount > 0 ? (
+                                <span title="No change from previous month" className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-500 cursor-help">
+                                  <Minus size={10} /> 0% MoM
+                                </span>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1 max-w-[100px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div className={`h-full ${hBar}`} style={{ width: `${hPct}%` }} />
+                              </div>
+                              <span className={`text-xs font-bold ${hText}`}>{hPct}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

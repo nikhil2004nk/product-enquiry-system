@@ -31,5 +31,7 @@ export default async function TargetsPage() {
     take: 12
   });
 
-  return <TargetClient initialMonth={currentMonth} initialTarget={target} historicalTargets={historicalTargets} />;
+  const isSuperAdmin = session.role === "SUPERADMIN";
+
+  return <TargetClient initialMonth={currentMonth} initialTarget={target} historicalTargets={historicalTargets} isSuperAdmin={isSuperAdmin} />;
 }

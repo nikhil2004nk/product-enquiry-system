@@ -141,3 +141,44 @@ export async function deleteTargetEntry(entryId: string) {
   await recalculateTargetTotal(entry.monthlyTargetId);
   revalidatePath("/targets");
 }
+
+export async function getTeamTargets(month: string) {
+  const session = await getSession();
+  if (!session || session.role !== "SUPERADMIN") return null;
+
+  const allUsers = await prisma.user.findMany({
+    select: { id: true, name: true, role: true }
+  });
+
+  // Calculate prev month
+  const d = new Date(month + "-01");
+  d.setMonth(d.getMonth() - 1);
+  const prevMonthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+  const targets = await prisma.monthlyTarget.findMany({
+    where: { month: { in: [month, prevMonthStr] } }
+  });
+
+  return allUsers.map(u => {
+    const currentTarget = targets.find(t => t.userId === u.id && t.month === month);
+    const pastTarget = targets.find(t => t.userId === u.id && t.month === prevMonthStr);
+    
+    const currentAchieved = currentTarget?.achievedAmount || 0;
+    const pastAchieved = pastTarget?.achievedAmount || 0;
+    
+    let growthPct = 0;
+    if (pastAchieved === 0 && currentAchieved > 0) {
+      growthPct = 100;
+    } else if (pastAchieved > 0) {
+      growthPct = ((currentAchieved - pastAchieved) / pastAchieved) * 100;
+    }
+
+    return {
+      userId: u.id,
+      userName: u.name,
+      targetAmount: currentTarget?.targetAmount || 0,
+      achievedAmount: currentAchieved,
+      growthPct
+    };
+  }).sort((a, b) => b.achievedAmount - a.achievedAmount);
+}
