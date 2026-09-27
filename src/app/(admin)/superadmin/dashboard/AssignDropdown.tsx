@@ -7,11 +7,13 @@ import { CustomDropdown } from "@/components/ui/CustomDropdown";
 export function AssignDropdown({
   enquiryId,
   admins,
-  initialValue = ""
+  initialValue = "",
+  className = "w-36"
 }: {
   enquiryId: string;
   admins: { id: string; name: string }[];
   initialValue?: string;
+  className?: string;
 }) {
   const [loading, setLoading] = useState(false);
   const [assigned, setAssigned] = useState(initialValue);
@@ -26,7 +28,7 @@ export function AssignDropdown({
   }
 
   return (
-    <div className="relative w-36 text-left">
+    <div className={`relative text-left ${className}`}>
       <CustomDropdown
         value={assigned}
         size="sm"

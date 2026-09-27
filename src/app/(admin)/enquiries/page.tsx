@@ -331,8 +331,11 @@ export default async function EnquiriesPage(props: {
               </div>
 
               {isSuper && (
-                <div className="mt-1">
-                  <AssignDropdown enquiryId={enq.id} admins={admins} initialValue={enq.userId || ""} />
+                <div className="mt-1 flex items-center gap-2 bg-gray-50/80 p-1.5 pl-3 rounded-xl border border-gray-100">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest shrink-0">Assigned To</span>
+                  <div className="flex-1">
+                    <AssignDropdown enquiryId={enq.id} admins={admins} initialValue={enq.userId || ""} className="w-full" />
+                  </div>
                 </div>
               )}
 
