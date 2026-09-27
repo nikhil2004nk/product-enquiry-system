@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { updateEnquiry } from "./actions";
-import { User, Tag, FileText } from "lucide-react";
+import { User, Tag, FileText, ArrowLeft } from "lucide-react";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Category = { id: string; name: string };
 type Product = { id: string; modelNumber: string; categoryId: string; productName: string | null };
@@ -25,6 +26,7 @@ export default function EditEnquiryForm({
   categories: Category[];
   products: Product[];
 }) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [name, setName] = useState(enquiry.customer.name);
@@ -44,12 +46,15 @@ export default function EditEnquiryForm({
     
     setIsSubmitting(true);
     try {
-      await updateEnquiry(enquiry.id, {
+      const res = await updateEnquiry(enquiry.id, {
         customerName: name,
         mobile,
         productId,
         notes,
       });
+      if (res?.success) {
+        router.push("/enquiries");
+      }
     } catch (err) {
       alert("Failed to update enquiry");
       setIsSubmitting(false);
@@ -61,6 +66,12 @@ export default function EditEnquiryForm({
   return (
     <div className="w-full max-w-5xl mx-auto animate-fade-up">
       <div className="flex items-center gap-3 mb-6">
+        <Link
+          href="/enquiries"
+          className="p-2 -ml-2 text-gray-400 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <ArrowLeft size={20} />
+        </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Edit Enquiry</h1>
           <p className="text-sm text-gray-400">Update customer & offering details</p>

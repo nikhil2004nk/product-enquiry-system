@@ -84,5 +84,5 @@ export async function updateEnquiry(
   }
 
   revalidatePath("/enquiries");
-  redirect("/enquiries");
+  return { success: true };
 }
