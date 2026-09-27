@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { PlusCircle, Clock, ChevronRight, TrendingUp, TrendingDown, Minus, Bell, AlertTriangle } from "lucide-react";
+import { PlusCircle, Clock, ChevronRight, TrendingUp, TrendingDown, Minus, Bell, AlertTriangle, Target } from "lucide-react";
 import { ShareLinkCard } from "./ShareLinkCard";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -71,6 +71,23 @@ export default async function DashboardPage() {
 
   const diff = todayEnquiriesCount - yesterdayEnquiriesCount;
 
+  // Fetch target data
+  const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  let targetData = null;
+  if (userCondition.userId) {
+    targetData = await prisma.monthlyTarget.findUnique({
+      where: { userId_month: { userId: userCondition.userId, month: currentMonthStr } }
+    });
+  } else if (isSuper) {
+    const allTargets = await prisma.monthlyTarget.findMany({
+      where: { month: currentMonthStr }
+    });
+    targetData = {
+      targetAmount: allTargets.reduce((sum: number, t: any) => sum + t.targetAmount, 0),
+      achievedAmount: allTargets.reduce((sum: number, t: any) => sum + t.achievedAmount, 0)
+    };
+  }
+
   const totalResolved = wonCount + lostCount;
   const winRate = totalResolved > 0 ? Math.round((wonCount / totalResolved) * 100) : 0;
 
@@ -99,7 +116,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Hero Stat Cards ───────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 
         {/* Enquiries Card */}
         <div
@@ -147,6 +164,51 @@ export default async function DashboardPage() {
                 {wonCount} won / {totalResolved} resolved
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Monthly Target Card */}
+        <div
+          className="rounded-2xl p-6 text-white relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", boxShadow: "0 12px 40px rgba(245,158,11,0.25)" }}
+        >
+          <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10" />
+          <div className="absolute -right-4 top-16 w-24 h-24 rounded-full bg-white/5" />
+
+          <div className="relative h-full flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-start mb-1">
+                <p className="text-sm font-bold text-white/80 uppercase tracking-widest">This Month's Target</p>
+                <Link href="/targets" className="text-white/80 hover:text-white transition-colors bg-white/10 p-1.5 rounded-lg"><Target size={16} /></Link>
+              </div>
+              
+              {targetData && targetData.targetAmount > 0 ? (
+                <>
+                  <p className="text-5xl font-black mt-2 mb-2 tracking-tight text-white drop-shadow-md">
+                    ₹{targetData.achievedAmount.toLocaleString()}
+                  </p>
+                </>
+              ) : (
+                <div className="mt-6 mb-2">
+                  <p className="text-xl font-bold mb-3 text-white">No Target Set</p>
+                  <Link href="/targets" className="text-sm bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors font-semibold">
+                    Set Goal Now
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {targetData && targetData.targetAmount > 0 && (
+              <div>
+                <div className="w-full bg-white/20 rounded-full h-1.5 mb-2 mt-4">
+                  <div className="bg-white h-1.5 rounded-full" style={{ width: `${Math.min(100, Math.round((targetData.achievedAmount / targetData.targetAmount) * 100))}%` }}></div>
+                </div>
+                <div className="flex justify-between text-xs font-bold text-white/90">
+                  <span>{Math.round((targetData.achievedAmount / targetData.targetAmount) * 100)}%</span>
+                  <span>Goal: ₹{targetData.targetAmount.toLocaleString()}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

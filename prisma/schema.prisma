@@ -117,6 +117,7 @@ model User {
   customers         Customer[]
   enquiries         Enquiry[]
   messageTemplates  MessageTemplate[]
+  monthlyTargets    MonthlyTarget[]
 }
 
 model MessageTemplate {
@@ -128,4 +129,31 @@ model MessageTemplate {
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model MonthlyTarget {
+  id             String   @id @default(cuid())
+  userId         String
+  month          String   // Format: "YYYY-MM" (e.g., "2026-09")
+  targetAmount   Float    @default(0)
+  achievedAmount Float    @default(0)
+  
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries        TargetEntry[]
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, month])
+}
+
+model TargetEntry {
+  id              String   @id @default(cuid())
+  monthlyTargetId String
+  amount          Float
+  date            DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  monthlyTarget   MonthlyTarget @relation(fields: [monthlyTargetId], references: [id], onDelete: Cascade)
 }

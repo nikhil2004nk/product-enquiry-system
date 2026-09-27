@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell, ShieldCheck, Menu, X, User } from "lucide-react";
+import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell, ShieldCheck, Menu, X, User, Target } from "lucide-react";
 import { logoutAdmin } from "@/app/login/actions";
 import { useTransition, useState, useEffect } from "react";
 import { GlobalAdminSwitcher } from "./GlobalAdminSwitcher";
@@ -47,6 +47,7 @@ export default function AdminLayoutClient({
     { href: "/notifications", icon: <Bell size={15} />, label: "Notifications", match: (p: string) => p.startsWith("/notifications") },
     { href: "/admin-enquiry", icon: <PlusCircle size={15} />, label: "New Enquiry", match: (p: string) => p === "/admin-enquiry" },
     { href: "/enquiries", icon: <Clock size={15} />, label: "Enquiries", match: (p: string) => p.startsWith("/enquiries") },
+    { href: "/targets", icon: <Target size={15} />, label: "Targets", match: (p: string) => p.startsWith("/targets") },
   ];
 
   const adminItems = [
