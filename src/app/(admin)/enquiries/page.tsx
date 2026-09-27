@@ -8,6 +8,7 @@ import SourceFilter from "./SourceFilter";
 import MonthFilter from "./MonthFilter";
 import DeleteEnquiryButton from "./DeleteEnquiryButton";
 import ReminderButton from "./ReminderButton";
+import EditEnquiryButton from "./EditEnquiryButton";
 import { ArrowLeft, MessageSquare, Inbox } from "lucide-react";
 import { Suspense } from "react";
 import { AssignDropdown } from "../superadmin/dashboard/AssignDropdown";
@@ -292,6 +293,7 @@ export default async function EnquiriesPage(props: {
                           mobile={enq.customer.mobile} 
                           templates={templates} 
                         />
+                        <EditEnquiryButton enquiryId={enq.id} />
                         <DeleteEnquiryButton enquiryId={enq.id} />
                       </div>
                     </td>
@@ -347,12 +349,13 @@ export default async function EnquiriesPage(props: {
                 </div>
               </div>
 
-              <div className="border-t border-gray-50 pt-2 flex items-center justify-end">
+              <div className="border-t border-gray-50 pt-2 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
                 <WhatsappButton 
                   enquiryId={enq.id} 
                   mobile={enq.customer.mobile} 
                   templates={templates} 
                 />
+                <EditEnquiryButton enquiryId={enq.id} />
                 <DeleteEnquiryButton enquiryId={enq.id} />
               </div>
             </div>
