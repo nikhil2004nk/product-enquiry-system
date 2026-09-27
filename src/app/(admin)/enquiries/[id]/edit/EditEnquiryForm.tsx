@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { updateEnquiry } from "./actions";
-import { User, Tag, FileText, ArrowLeft } from "lucide-react";
+import { User, Tag, FileText, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,6 +28,7 @@ export default function EditEnquiryForm({
 }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   
   const [name, setName] = useState(enquiry.customer.name);
   const [mobile, setMobile] = useState(enquiry.customer.mobile);
@@ -53,7 +54,10 @@ export default function EditEnquiryForm({
         notes,
       });
       if (res?.success) {
-        router.push("/enquiries");
+        setShowToast(true);
+        setTimeout(() => {
+          router.push("/enquiries");
+        }, 1200);
       }
     } catch (err) {
       alert("Failed to update enquiry");
@@ -64,7 +68,17 @@ export default function EditEnquiryForm({
   const categoryProducts = products.filter((p) => p.categoryId === categoryId);
 
   return (
-    <div className="w-full max-w-5xl mx-auto animate-fade-up">
+    <>
+      {showToast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] animate-fade-up">
+          <div className="flex items-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-600/30">
+            <CheckCircle2 size={18} />
+            Enquiry updated successfully!
+          </div>
+        </div>
+      )}
+      
+      <div className="w-full max-w-5xl mx-auto animate-fade-up">
       <div className="flex items-center gap-3 mb-6">
         <Link
           href="/enquiries"
@@ -199,5 +213,6 @@ export default function EditEnquiryForm({
         </div>
       </form>
     </div>
+    </>
   );
 }

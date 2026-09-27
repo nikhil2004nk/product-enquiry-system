@@ -339,7 +339,12 @@ export default async function EnquiriesPage(props: {
               <div className="flex items-center justify-between border-t border-gray-50 pt-2 mt-1">
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{enq.product.modelNumber}</p>
-                  <p className="text-xs text-gray-400">{enq.product.category.name}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <p className="text-xs text-gray-400">{enq.product.category.name}</p>
+                    {(enq as any).source === "PUBLIC" && (
+                      <span className="text-[10px] uppercase font-bold text-indigo-600 bg-indigo-50 px-1.5 rounded">Public</span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-gray-400 text-right pr-2">

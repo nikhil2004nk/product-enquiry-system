@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell, ShieldCheck, Menu, X } from "lucide-react";
+import { Home, PlusCircle, Clock, Settings, Users, Zap, LogOut, Link as LinkIcon, Check, Package, Bell, ShieldCheck, Menu, X, User } from "lucide-react";
 import { logoutAdmin } from "@/app/login/actions";
 import { useTransition, useState, useEffect } from "react";
 import { GlobalAdminSwitcher } from "./GlobalAdminSwitcher";
@@ -10,11 +10,15 @@ import { GlobalAdminSwitcher } from "./GlobalAdminSwitcher";
 export default function AdminLayoutClient({
   children,
   role,
+  userName,
+  userMobile,
   isViewingAsAdmin = false,
   publicLinkId = "",
 }: {
   children: React.ReactNode;
   role: string | null;
+  userName: string;
+  userMobile: string;
   isViewingAsAdmin?: boolean;
   publicLinkId?: string;
 }) {
@@ -52,6 +56,7 @@ export default function AdminLayoutClient({
     ] : []),
     { href: "/admin/products", icon: <Package size={15} />, label: "Manage Catalog", match: (p: string) => p.startsWith("/admin/products") },
     { href: "/settings", icon: <Settings size={15} />, label: "Settings", match: (p: string) => p.startsWith("/settings") },
+    { href: "/profile", icon: <User size={15} />, label: "Profile", match: (p: string) => p.startsWith("/profile") },
   ];
 
   return (
@@ -101,8 +106,17 @@ export default function AdminLayoutClient({
             </button>
           </div>
 
-          {/* Logout */}
-          <div className="pt-2 border-t border-white/10 mt-2">
+          {/* User Profile & Logout */}
+          <div className="p-2 border-t border-white/10 mt-2">
+            <Link href="/profile" className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-white/10 transition-colors mb-1">
+              <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
+                <User size={16} className="text-indigo-300" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-white font-bold text-sm truncate leading-tight">{userName}</span>
+                <span className="text-white/60 text-[10px] tracking-wide truncate">+91 {userMobile}</span>
+              </div>
+            </Link>
             <button
               onClick={handleLogout}
               disabled={isPending}
@@ -125,14 +139,14 @@ export default function AdminLayoutClient({
       <div className="flex-1 flex flex-col h-[100dvh] overflow-hidden">
 
         {/* Mobile Header */}
-        <header className="md:hidden sticky top-0 z-30 flex h-12 items-center justify-between px-3 bg-white/90 backdrop-blur-md border-b border-gray-100 shrink-0">
-          <div className="flex items-center gap-1.5">
-            <div className="w-6 h-6 rounded-md bg-indigo-600 flex items-center justify-center">
-              <Zap size={12} className="text-white" />
+        <header className="md:hidden sticky top-0 z-30 flex h-16 items-center justify-between px-4 bg-white/90 backdrop-blur-md border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+              <Zap size={16} className="text-white" />
             </div>
-            <span className="font-bold text-gray-900" style={{ fontSize: 13 }}>Enquiry CRM</span>
+            <span className="font-bold text-gray-900 text-lg tracking-tight">Enquiry CRM</span>
           </div>
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-1">
             <Link href="/notifications" className="w-8 h-8 flex items-center justify-center rounded-lg text-indigo-500 hover:bg-indigo-50 transition-colors" title="Notifications">
               <Bell size={16} />
             </Link>
@@ -159,13 +173,16 @@ export default function AdminLayoutClient({
 
           {/* Sidebar Drawer */}
           <aside className="relative w-64 max-w-[80vw] h-full shadow-2xl flex flex-col animate-fade-in" style={{ background: "var(--sidebar)" }}>
-            <div className="flex h-12 items-center justify-between px-5 border-b border-white/10 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-lg bg-indigo-500 flex items-center justify-center shadow">
-                  <Zap size={13} className="text-white" />
+            <div className="flex items-center justify-between px-3 py-3 border-b border-white/10 shrink-0">
+              <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-white/10 transition-colors flex-1 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
+                  <User size={16} className="text-indigo-300" />
                 </div>
-                <span className="text-white font-bold tracking-tight" style={{ fontSize: 13 }}>Menu</span>
-              </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-white font-bold text-sm truncate leading-tight">{userName}</span>
+                  <span className="text-white/60 text-[10px] tracking-wide truncate">+91 {userMobile}</span>
+                </div>
+              </Link>
               <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 text-white/50 hover:text-white rounded-lg transition-colors">
                 <X size={20} />
               </button>
